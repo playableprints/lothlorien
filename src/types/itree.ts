@@ -370,50 +370,50 @@ export interface ITree<T> {
      * Returns an array of keys representing the leaf nodes of the tree.
      * @returns {string[]} An array of keys representing the leaf nodes.
      */
-    leafKeys(): string[];
+    leafKeys(origin?: string | string[], ...moreOrigins: string[]): string[];
 
     /**
      * Returns an array of values representing the leaf nodes of the tree.
      * @returns {T[]} An array of values representing the leaf nodes.
      */
-    leafValues(): T[];
+    leafValues(origin?: string | string[], ...moreOrigins: string[]): T[];
 
     /**
      * Returns an array of key-value pairs representing the leaf nodes of the tree.
      * @returns {[string, T][]} An array of key-value pairs representing the leaf nodes.
      */
-    leafTuples(): [string, T][];
+    leafTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][];
 
     /**
      * Returns an object representing the leaf nodes of the tree, with keys as node keys and values as node values.
      * @returns {{ [key: string]: T }} An object representing the leaf nodes.
      */
-    leafCollection(): { [key: string]: T };
+    leafCollection(origin?: string | string[], ...moreOrigins: string[]): { [key: string]: T };
 
     /**
      * Returns an array of keys representing the nodes of the tree in a width-first traversal.
      * @returns {string[]} An array of keys representing the nodes in width-first.
      */
-    wideKeys(from: string | string[], ...rest: string[]): string[];
+    wideKeys(origin?: string | string[], ...moreOrigins: string[]): string[];
 
     /**
      * Returns an array of values representing the nodes of the tree in a width-first traversal.
      * @returns {T[]} An array of values representing the nodes in width-first.
      */
-    wideValues(): T[];
+    wideValues(origin?: string | string[], ...moreOrigins: string[]): T[];
 
     /**
      * Returns an array of key-value tuples representing the nodes of the tree in a width-first traversal.
      * @returns {[string, T][]} An array of key-value tuples representing the nodes in width-first.
      */
-    wideTuples(): [string, T][];
+    wideTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][];
 
     /**
      * Returns an array of key-value pairs representing the nodes of the tree in a width-first traversal.
      * @returns { { key: string; value: T }[] } An array of objects representing the key-value pairs of the nodes in width-first.
      * Each object in the array has two properties: `key` (string) representing the key of the node and `value` (type `T`) representing the value associated with the node.
      */
-    widePairs(): { key: string; value: T }[];
+    widePairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[];
 
     /**
      * Applies a reducer function to each node in the tree in a width-first traversal.
@@ -425,7 +425,7 @@ export interface ITree<T> {
      * @param {R} start The initial value of the accumulator for the reduction.
      * @returns {R} The final accumulated result after applying the reducer to all nodes.
      */
-    reduceWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R): R;
+    reduceWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R;
 
     /**
      * Maps a function to each node in the tree in a wide-order traversal.
@@ -437,32 +437,32 @@ export interface ITree<T> {
      *   - `i` (number): The index of the current node in the wide-order traversal.
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
      */
-    mapWide<R = void>(mapper: KeyedMapper<T, string, R>): R[];
+    mapWide<R = void>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[];
 
     /**
      * Returns an array of keys representing all nodes in the tree in a depth-first traversal.
      * @returns {string[]} An array of keys representing all nodes in the tree in a depth-first traversal.
      */
-    deepKeys(): string[];
+    deepKeys(origin?: string | string[], ...moreOrigins: string[]): string[];
 
     /**
      * Returns an array of values associated with all nodes in the tree in a depth-first traversal.
      * @returns {T[]} An array of values associated with all nodes in the tree in a depth-first traversal.
      */
-    deepValues(): T[];
+    deepValues(origin?: string | string[], ...moreOrigins: string[]): T[];
 
     /**
      * Returns an array of key-value tuples representing all nodes in the tree in a depth-first traversal.
      * @returns {[string, T][]} An array of key-value tuples representing all nodes in the tree in a depth-first traversal.
      */
-    deepTuples(): [string, T][];
+    deepTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][];
 
     /**
      * Returns an array of key-value pairs representing the nodes of the tree in a depth-first traversal.
      * @returns { { key: string; value: T }[] } An array of objects representing the key-value pairs of the nodes in depth-first.
      * Each object in the array has two properties: `key` (string) representing the key of the node and `value` (type `T`) representing the value associated with the node.
      */
-    deepPairs(): { key: string; value: T }[];
+    deepPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[];
 
     /**
      * Applies a reducer function to each node in the tree in a depth-first traversal.
@@ -474,7 +474,7 @@ export interface ITree<T> {
      * @param {R} start The initial value of the accumulator for the reduction.
      * @returns {R} The final accumulated result after applying the reducer to all nodes.
      */
-    reduceDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R): R;
+    reduceDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R;
 
     /**
      * Maps a function to each node in the tree in a deep-order traversal.
@@ -486,7 +486,104 @@ export interface ITree<T> {
      *   - `i` (number): The index of the current node in the deep-order traversal.
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
      */
-    mapDeep<R = void>(mapper: KeyedMapper<T, string, R>): R[];
+    mapDeep<R = void>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[];
+
+    /**
+     * Returns an array of keys representing the nodes of the tree in a width-first traversal starting from leaf nodes.
+     * @returns {string[]} An array of keys representing the nodes in width-first starting from leaf nodes.
+     */
+    wideUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[];
+
+    /**
+     * Returns an array of values representing the nodes of the tree in a width-first traversal starting from leaf nodes.
+     * @returns {T[]} An array of values representing the nodes in width-first starting from leaf nodes.
+     */
+    wideUpwardValues(origin?: string | string[], ...moreOrigins: string[]): T[];
+
+    /**
+     * Returns an array of key-value pairs representing the nodes of the tree in a width-first traversal starting from leaf nodes.
+     * @returns {[string, T][]} An array of key-value pairs representing the nodes in width-first starting from leaf nodes.
+     */
+    wideUpwardTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][];
+
+    /**
+     * Returns an array of key-value pairs representing the nodes of the tree in a width-first traversal starting from leaf nodes.
+     * @returns { { key: string; value: T }[] } An array of objects representing the key-value pairs of the nodes in width-first.
+     * Each object in the array has two properties: `key` (string) representing the key of the node and `value` (type `T`) representing the value associated with the node.
+     */
+    wideUpwardPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[];
+
+    /**
+     * Applies a reducer function to each node in the tree in a width-first traversal.
+     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
+     * - `key` (string): The key of the current node being processed.
+     * - `value` (type `T`): The value associated with the current node being processed.
+     * - `i` (number): The index of the current node in the width-first traversal.
+     * - `accumulation` (type `R`): The accumulated result from previous reductions.
+     * @param {R} start The initial value of the accumulator for the reduction.
+     * @returns {R} The final accumulated result after applying the reducer to all nodes.
+     */
+    reduceUpwardsWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R;
+
+    /**
+     * Maps a function to each node in the tree in a wide-order traversal, starting at leaves and going upwards towards roots.
+     *
+     * @template R - The type of the result.
+     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
+     *   - `value` (type `T`): The value associated with the current node being processed.
+     *   - `key` (string): The key of the current node being processed.
+     *   - `i` (number): The index of the current node in the wide-order traversal.
+     * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
+     */
+    mapUpwardsWide<R = void>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[];
+
+    /**
+     * Returns an array of keys representing all nodes in the tree in a depth-first traversal.
+     * @returns {string[]} An array of keys representing all nodes in the tree in a depth-first traversal.
+     */
+    deepUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[];
+
+    /**
+     * Returns an array of values associated with all nodes in the tree in a depth-first traversal.
+     * @returns {T[]} An array of values associated with all nodes in the tree in a depth-first traversal.
+     */
+    deepUpwardValues(origin?: string | string[], ...moreOrigins: string[]): T[];
+
+    /**
+     * Returns an array of key-value tuples representing all nodes in the tree in a depth-first traversal.
+     * @returns {[string, T][]} An array of key-value tuples representing all nodes in the tree in a depth-first traversal.
+     */
+    deepUpwardTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][];
+
+    /**
+     * Returns an array of key-value pairs representing all nodes in the tree in a depth-first traversal.
+     * @returns { { key: string; value: T }[] } An array of key-value pairs representing all nodes in the tree in a depth-first traversal.
+     */
+    deepUpwardPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[];
+
+    /**
+     * Applies a reducer function to each node in the tree in a depth-first traversal.
+     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
+     * - `key` (string): The key of the current node being processed.
+     * - `value` (type `T`): The value associated with the current node being processed.
+     * - `i` (number): The index of the current node in the depth-first traversal.
+     * - `accumulation` (type `R`): The accumulated result from previous reductions.
+     * @param {R} start The initial value of the accumulator for the reduction.
+     * @returns {R} The final accumulated result after applying the reducer to all nodes.
+     */
+    reduceUpwardsDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R;
+
+    /**
+     * Maps a function to each node in the tree in a deep-order traversal, starting at leaves and going upwards towards roots.
+     *
+     * @template R - The type of the result.
+     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
+     *   - `value` (type `T`): The value associated with the current node being processed.
+     *   - `key` (string): The key of the current node being processed.
+     *   - `i` (number): The index of the current node in the deep-order traversal.
+     * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
+     */
+    mapUpwardsDeep<R = void>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[];
 
     /**
      * Finds the keys representing the path from one node to another in the tree, if it exists. If no such path is viable, the array will be empty.
@@ -548,95 +645,4 @@ export interface ITree<T> {
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
      */
     mapPath<R = void>(from: string, to: string, mapper: KeyedMapper<T, string, R>): R[];
-
-    /**
-     * Returns an array of keys representing the nodes of the tree in a width-first traversal starting from leaf nodes.
-     * @returns {string[]} An array of keys representing the nodes in width-first starting from leaf nodes.
-     */
-    wideUpwardKeys(): string[];
-
-    /**
-     * Returns an array of values representing the nodes of the tree in a width-first traversal starting from leaf nodes.
-     * @returns {T[]} An array of values representing the nodes in width-first starting from leaf nodes.
-     */
-    wideUpwardValues(): T[];
-
-    /**
-     * Returns an array of key-value pairs representing the nodes of the tree in a width-first traversal starting from leaf nodes.
-     * @returns {[string, T][]} An array of key-value pairs representing the nodes in width-first starting from leaf nodes.
-     */
-    wideUpwardTuples(): [string, T][];
-
-    /**
-     * Returns an array of key-value pairs representing the nodes of the tree in a width-first traversal starting from leaf nodes.
-     * @returns { { key: string; value: T }[] } An array of objects representing the key-value pairs of the nodes in width-first.
-     * Each object in the array has two properties: `key` (string) representing the key of the node and `value` (type `T`) representing the value associated with the node.
-     */
-    wideUpwardPairs(): { key: string; value: T }[];
-
-    /**
-     * Applies a reducer function to each node in the tree in a width-first traversal.
-     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
-     * - `key` (string): The key of the current node being processed.
-     * - `value` (type `T`): The value associated with the current node being processed.
-     * - `i` (number): The index of the current node in the width-first traversal.
-     * - `accumulation` (type `R`): The accumulated result from previous reductions.
-     * @param {R} start The initial value of the accumulator for the reduction.
-     * @returns {R} The final accumulated result after applying the reducer to all nodes.
-     */
-    reduceUpwardsWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R): R;
-
-    /**
-     * Maps a function to each node in the tree in a wide-order traversal, starting at leaves and going upwards towards roots.
-     *
-     * @template R - The type of the result.
-     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
-     *   - `value` (type `T`): The value associated with the current node being processed.
-     *   - `key` (string): The key of the current node being processed.
-     *   - `i` (number): The index of the current node in the wide-order traversal.
-     * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
-     */
-    mapUpwardsWide<R = void>(mapper: KeyedMapper<T, string, R>): R[];
-
-    /**
-     * Returns an array of keys representing all nodes in the tree in a depth-first traversal.
-     * @returns {string[]} An array of keys representing all nodes in the tree in a depth-first traversal.
-     */
-    deepUpwardKeys(): string[];
-
-    /**
-     * Returns an array of values associated with all nodes in the tree in a depth-first traversal.
-     * @returns {T[]} An array of values associated with all nodes in the tree in a depth-first traversal.
-     */
-    deepUpwardValues(): T[];
-
-    /**
-     * Returns an array of key-value pairs representing all nodes in the tree in a depth-first traversal.
-     * @returns {[string, T][]} An array of key-value pairs representing all nodes in the tree in a depth-first traversal.
-     */
-    deepUpwardTuples(): [string, T][];
-
-    /**
-     * Applies a reducer function to each node in the tree in a depth-first traversal.
-     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
-     * - `key` (string): The key of the current node being processed.
-     * - `value` (type `T`): The value associated with the current node being processed.
-     * - `i` (number): The index of the current node in the depth-first traversal.
-     * - `accumulation` (type `R`): The accumulated result from previous reductions.
-     * @param {R} start The initial value of the accumulator for the reduction.
-     * @returns {R} The final accumulated result after applying the reducer to all nodes.
-     */
-    reduceUpwardsDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R): R;
-
-    /**
-     * Maps a function to each node in the tree in a deep-order traversal, starting at leaves and going upwards towards roots.
-     *
-     * @template R - The type of the result.
-     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
-     *   - `value` (type `T`): The value associated with the current node being processed.
-     *   - `key` (string): The key of the current node being processed.
-     *   - `i` (number): The index of the current node in the deep-order traversal.
-     * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
-     */
-    mapUpwardsDeep<R = void>(mapper: KeyedMapper<T, string, R>): R[];
 }
