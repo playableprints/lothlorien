@@ -374,42 +374,56 @@ export interface ITree<T> {
 
     /**
      * Returns an array of values representing the leaf nodes of the tree.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {T[]} An array of values representing the leaf nodes.
      */
     leafValues(origin?: string | string[], ...moreOrigins: string[]): T[];
 
     /**
      * Returns an array of key-value pairs representing the leaf nodes of the tree.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {[string, T][]} An array of key-value pairs representing the leaf nodes.
      */
     leafTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][];
 
     /**
      * Returns an object representing the leaf nodes of the tree, with keys as node keys and values as node values.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {{ [key: string]: T }} An object representing the leaf nodes.
      */
     leafCollection(origin?: string | string[], ...moreOrigins: string[]): { [key: string]: T };
 
     /**
      * Returns an array of keys representing the nodes of the tree in a width-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {string[]} An array of keys representing the nodes in width-first.
      */
     wideKeys(origin?: string | string[], ...moreOrigins: string[]): string[];
 
     /**
      * Returns an array of values representing the nodes of the tree in a width-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {T[]} An array of values representing the nodes in width-first.
      */
     wideValues(origin?: string | string[], ...moreOrigins: string[]): T[];
 
     /**
      * Returns an array of key-value tuples representing the nodes of the tree in a width-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {[string, T][]} An array of key-value tuples representing the nodes in width-first.
      */
     wideTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][];
 
     /**
      * Returns an array of key-value pairs representing the nodes of the tree in a width-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns { { key: string; value: T }[] } An array of objects representing the key-value pairs of the nodes in width-first.
      * Each object in the array has two properties: `key` (string) representing the key of the node and `value` (type `T`) representing the value associated with the node.
      */
@@ -423,6 +437,8 @@ export interface ITree<T> {
      * - `i` (number): The index of the current node in the width-first traversal.
      * - `accumulation` (type `R`): The accumulated result from previous reductions.
      * @param {R} start The initial value of the accumulator for the reduction.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {R} The final accumulated result after applying the reducer to all nodes.
      */
     reduceWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R;
@@ -435,30 +451,40 @@ export interface ITree<T> {
      *   - `value` (type `T`): The value associated with the current node being processed.
      *   - `key` (string): The key of the current node being processed.
      *   - `i` (number): The index of the current node in the wide-order traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
      */
     mapWide<R = void>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[];
 
     /**
      * Returns an array of keys representing all nodes in the tree in a depth-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {string[]} An array of keys representing all nodes in the tree in a depth-first traversal.
      */
     deepKeys(origin?: string | string[], ...moreOrigins: string[]): string[];
 
     /**
      * Returns an array of values associated with all nodes in the tree in a depth-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {T[]} An array of values associated with all nodes in the tree in a depth-first traversal.
      */
     deepValues(origin?: string | string[], ...moreOrigins: string[]): T[];
 
     /**
      * Returns an array of key-value tuples representing all nodes in the tree in a depth-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {[string, T][]} An array of key-value tuples representing all nodes in the tree in a depth-first traversal.
      */
     deepTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][];
 
     /**
      * Returns an array of key-value pairs representing the nodes of the tree in a depth-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns { { key: string; value: T }[] } An array of objects representing the key-value pairs of the nodes in depth-first.
      * Each object in the array has two properties: `key` (string) representing the key of the node and `value` (type `T`) representing the value associated with the node.
      */
@@ -472,6 +498,8 @@ export interface ITree<T> {
      * - `i` (number): The index of the current node in the depth-first traversal.
      * - `accumulation` (type `R`): The accumulated result from previous reductions.
      * @param {R} start The initial value of the accumulator for the reduction.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {R} The final accumulated result after applying the reducer to all nodes.
      */
     reduceDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R;
@@ -484,30 +512,40 @@ export interface ITree<T> {
      *   - `value` (type `T`): The value associated with the current node being processed.
      *   - `key` (string): The key of the current node being processed.
      *   - `i` (number): The index of the current node in the deep-order traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
      */
     mapDeep<R = void>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[];
 
     /**
      * Returns an array of keys representing the nodes of the tree in a width-first traversal starting from leaf nodes.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {string[]} An array of keys representing the nodes in width-first starting from leaf nodes.
      */
     wideUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[];
 
     /**
      * Returns an array of values representing the nodes of the tree in a width-first traversal starting from leaf nodes.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {T[]} An array of values representing the nodes in width-first starting from leaf nodes.
      */
     wideUpwardValues(origin?: string | string[], ...moreOrigins: string[]): T[];
 
     /**
      * Returns an array of key-value pairs representing the nodes of the tree in a width-first traversal starting from leaf nodes.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {[string, T][]} An array of key-value pairs representing the nodes in width-first starting from leaf nodes.
      */
     wideUpwardTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][];
 
     /**
      * Returns an array of key-value pairs representing the nodes of the tree in a width-first traversal starting from leaf nodes.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns { { key: string; value: T }[] } An array of objects representing the key-value pairs of the nodes in width-first.
      * Each object in the array has two properties: `key` (string) representing the key of the node and `value` (type `T`) representing the value associated with the node.
      */
@@ -521,6 +559,8 @@ export interface ITree<T> {
      * - `i` (number): The index of the current node in the width-first traversal.
      * - `accumulation` (type `R`): The accumulated result from previous reductions.
      * @param {R} start The initial value of the accumulator for the reduction.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {R} The final accumulated result after applying the reducer to all nodes.
      */
     reduceUpwardsWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R;
@@ -533,30 +573,40 @@ export interface ITree<T> {
      *   - `value` (type `T`): The value associated with the current node being processed.
      *   - `key` (string): The key of the current node being processed.
      *   - `i` (number): The index of the current node in the wide-order traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
      */
     mapUpwardsWide<R = void>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[];
 
     /**
      * Returns an array of keys representing all nodes in the tree in a depth-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {string[]} An array of keys representing all nodes in the tree in a depth-first traversal.
      */
     deepUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[];
 
     /**
      * Returns an array of values associated with all nodes in the tree in a depth-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {T[]} An array of values associated with all nodes in the tree in a depth-first traversal.
      */
     deepUpwardValues(origin?: string | string[], ...moreOrigins: string[]): T[];
 
     /**
      * Returns an array of key-value tuples representing all nodes in the tree in a depth-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {[string, T][]} An array of key-value tuples representing all nodes in the tree in a depth-first traversal.
      */
     deepUpwardTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][];
 
     /**
      * Returns an array of key-value pairs representing all nodes in the tree in a depth-first traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns { { key: string; value: T }[] } An array of key-value pairs representing all nodes in the tree in a depth-first traversal.
      */
     deepUpwardPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[];
@@ -569,6 +619,8 @@ export interface ITree<T> {
      * - `i` (number): The index of the current node in the depth-first traversal.
      * - `accumulation` (type `R`): The accumulated result from previous reductions.
      * @param {R} start The initial value of the accumulator for the reduction.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {R} The final accumulated result after applying the reducer to all nodes.
      */
     reduceUpwardsDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R;
@@ -581,6 +633,8 @@ export interface ITree<T> {
      *   - `value` (type `T`): The value associated with the current node being processed.
      *   - `key` (string): The key of the current node being processed.
      *   - `i` (number): The index of the current node in the deep-order traversal.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
      */
     mapUpwardsDeep<R = void>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[];
