@@ -202,18 +202,18 @@ export class SortedTree<T> extends Tree<T> implements ISortedTree<T> {
 
     // OVERRIDE SUPERCLASS METHODS
 
-    clear() {
+    override clear() {
         super.clear();
         this._keys = [];
     }
 
-    populate<F>(list: Iterable<F>, allocator: (data: F) => void | IterableOr<{ key: string; value: T; parent: string | null }>): void {
+    override populate<F>(list: Iterable<F>, allocator: (data: F) => void | IterableOr<{ key: string; value: T; parent: string | null }>): void {
         super.populate(list, allocator);
         this.sort();
     }
 
     // overriding this because I don't want to sort *everything* on every insertion when I can just sort a specific subset after insertion.
-    add(key: string, parent: string | null, value: T): void {
+    override add(key: string, parent: string | null, value: T): void {
         super.add(key, parent, value);
         if (parent === null) {
             this._keys.push(key);
@@ -254,7 +254,7 @@ export class SortedTree<T> extends Tree<T> implements ISortedTree<T> {
         }
     }
 
-    trim(key: string): T | undefined {
+    override trim(key: string): T | undefined {
         const res = super.trim(key);
         if (res) {
             this._keys = this._keys.filter((k) => k !== key);
@@ -262,7 +262,7 @@ export class SortedTree<T> extends Tree<T> implements ISortedTree<T> {
         return res;
     }
 
-    truncate(key: string): { [key: string]: T } | undefined {
+    override truncate(key: string): { [key: string]: T } | undefined {
         const res = super.truncate(key);
         if (res) {
             const remKeys = Object.keys(res);
@@ -271,7 +271,7 @@ export class SortedTree<T> extends Tree<T> implements ISortedTree<T> {
         return res;
     }
 
-    pluck(key: string): T | undefined {
+    override pluck(key: string): T | undefined {
         const res = super.pluck(key);
         if (res) {
             this.sort();
@@ -279,7 +279,7 @@ export class SortedTree<T> extends Tree<T> implements ISortedTree<T> {
         return res;
     }
 
-    prune(key: string): ISortedTree<T> {
+    override prune(key: string): ISortedTree<T> {
         const res = new SortedTree<T>();
         const migrate = (k: string) => {
             const { parent, children, value } = this._store[k];
@@ -297,7 +297,7 @@ export class SortedTree<T> extends Tree<T> implements ISortedTree<T> {
         return res;
     }
 
-    splice(key: string): T | undefined {
+    override splice(key: string): T | undefined {
         const res = super.splice(key);
         if (res) {
             this.sort();
@@ -305,12 +305,12 @@ export class SortedTree<T> extends Tree<T> implements ISortedTree<T> {
         return res;
     }
 
-    condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => false | TreeEntry<T>): void {
+    override condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => false | TreeEntry<T>): void {
         super.condense(merger);
         this.sort();
     }
 
-    detach(key: string | null): void {
+    override detach(key: string | null): void {
         super.detach(key);
         this.sort();
     }
