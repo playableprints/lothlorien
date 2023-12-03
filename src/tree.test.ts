@@ -562,44 +562,92 @@ describe("advanced CRUD operations", () => {
 });
 
 describe("Traversal", () => {
-    test("deepKeys - depth-wise traversal", () => {
-        const tree = makeTreeAlpha();
-        expect(tree.deepKeys()).toStrictEqual(["alpha", "alpha/1", "alpha/1/1", "alpha/1/1/1", "alpha/1/2", "alpha/1/3", "alpha/1/3/1", "alpha/2", "alpha/2/1", "alpha/2/2"]);
+    describe("deepKeys", () => {
+        test("default", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.deepKeys()).toStrictEqual(["alpha", "alpha/1", "alpha/1/1", "alpha/1/1/1", "alpha/1/2", "alpha/1/3", "alpha/1/3/1", "alpha/2", "alpha/2/1", "alpha/2/2"]);
+        });
+
+        test("single-scoped", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.deepKeys("alpha/1")).toStrictEqual(["alpha/1", "alpha/1/1", "alpha/1/1/1", "alpha/1/2", "alpha/1/3", "alpha/1/3/1"]);
+        });
+
+        test("multiple scopes", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.deepKeys("alpha/1", "alpha/2")).toStrictEqual(["alpha/1", "alpha/1/1", "alpha/1/1/1", "alpha/1/2", "alpha/1/3", "alpha/1/3/1", "alpha/2", "alpha/2/1", "alpha/2/2"]);
+        });
+
+        test("overlapping scopes", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.deepKeys("alpha/1", "alpha/1/2")).toStrictEqual(["alpha/1", "alpha/1/1", "alpha/1/1/1", "alpha/1/2", "alpha/1/3", "alpha/1/3/1"]);
+        });
     });
 
-    test("scoped deepKeys", () => {
-        const tree = makeTreeAlpha();
-        expect(tree.deepKeys("alpha/1")).toStrictEqual(["alpha/1", "alpha/1/1", "alpha/1/1/1", "alpha/1/2", "alpha/1/3", "alpha/1/3/1"]);
+    describe("wideKeys", () => {
+        test("default", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.wideKeys()).toStrictEqual(["alpha", "alpha/1", "alpha/2", "alpha/1/1", "alpha/1/2", "alpha/1/3", "alpha/2/1", "alpha/2/2", "alpha/1/1/1", "alpha/1/3/1"]);
+        });
+
+        test("single scopes", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.wideKeys("alpha/1")).toStrictEqual(["alpha/1", "alpha/1/1", "alpha/1/2", "alpha/1/3", "alpha/1/1/1", "alpha/1/3/1"]);
+        });
+
+        test("multiple scopes", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.wideKeys("alpha/1", "alpha/2")).toStrictEqual(["alpha/1", "alpha/2", "alpha/1/1", "alpha/1/2", "alpha/1/3", "alpha/2/1", "alpha/2/2", "alpha/1/1/1", "alpha/1/3/1"]);
+        });
+
+        test("overlapping scopes", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.wideKeys("alpha/1", "alpha/1/2")).toStrictEqual(["alpha/1", "alpha/1/2", "alpha/1/1", "alpha/1/3", "alpha/1/1/1", "alpha/1/3/1"]);
+        });
     });
 
-    test("wideKeys - width-wise traversal", () => {
-        const tree = makeTreeAlpha();
-        expect(tree.wideKeys()).toStrictEqual(["alpha", "alpha/1", "alpha/2", "alpha/1/1", "alpha/1/2", "alpha/1/3", "alpha/2/1", "alpha/2/2", "alpha/1/1/1", "alpha/1/3/1"]);
+    describe("deepUpwardKeys", () => {
+        test("default", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.deepUpwardKeys()).toStrictEqual(["alpha/1/1/1", "alpha/1/1", "alpha/1", "alpha", "alpha/1/2", "alpha/1/3/1", "alpha/1/3", "alpha/2/1", "alpha/2", "alpha/2/2"]);
+        });
+
+        test("scoped", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.deepUpwardKeys("alpha/1")).toStrictEqual(["alpha/1/1/1", "alpha/1/1", "alpha/1", "alpha/1/2", "alpha/1/3/1", "alpha/1/3"]);
+        });
+
+        test("multiple scopes", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.deepUpwardKeys("alpha/1", "alpha/2")).toStrictEqual(["alpha/1/1/1", "alpha/1/1", "alpha/1", "alpha/1/2", "alpha/1/3/1", "alpha/1/3", "alpha/2/1", "alpha/2", "alpha/2/2"]);
+        });
+
+        test("overlapping scopes", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.deepUpwardKeys("alpha/1", "alpha/1/2")).toStrictEqual(["alpha/1/1/1", "alpha/1/1", "alpha/1", "alpha/1/2", "alpha/1/3/1", "alpha/1/3"]);
+        });
     });
 
-    test("scoped wideKeys", () => {
-        const tree = makeTreeAlpha();
-        expect(tree.wideKeys("alpha/1")).toStrictEqual(["alpha/1", "alpha/1/1", "alpha/1/2", "alpha/1/3", "alpha/1/1/1", "alpha/1/3/1"]);
-    });
+    describe("wideUpwardKeys", () => {
+        test("default", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.wideUpwardKeys()).toStrictEqual(["alpha/1/1/1", "alpha/1/2", "alpha/1/3/1", "alpha/2/1", "alpha/2/2", "alpha/1/1", "alpha/1", "alpha/1/3", "alpha/2", "alpha"]);
+        });
 
-    test("deepUpwardKeys - depth-wise traversal from leaves", () => {
-        const tree = makeTreeAlpha();
-        expect(tree.deepUpwardKeys()).toStrictEqual(["alpha/1/1/1", "alpha/1/1", "alpha/1", "alpha", "alpha/1/2", "alpha/1/3/1", "alpha/1/3", "alpha/2/1", "alpha/2", "alpha/2/2"]);
-    });
+        test("scoped", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.wideUpwardKeys("alpha/1")).toStrictEqual(["alpha/1/1/1", "alpha/1/2", "alpha/1/3/1", "alpha/1/1", "alpha/1", "alpha/1/3"]);
+        });
 
-    test("scoped deepUpwardKeys", () => {
-        const tree = makeTreeAlpha();
-        expect(tree.deepUpwardKeys("alpha/1")).toStrictEqual(["alpha/1/1/1", "alpha/1/1", "alpha/1", "alpha", "alpha/1/2", "alpha/1/3/1", "alpha/1/3"]);
-    });
+        test("multiple scopes", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.wideUpwardKeys("alpha/1", "alpha/2")).toStrictEqual(["alpha/1/1/1", "alpha/1/2", "alpha/1/3/1", "alpha/2/1", "alpha/2/2", "alpha/1/1", "alpha/1", "alpha/1/3", "alpha/2"]);
+        });
 
-    test("wideUpwardKeys - width-wise traversal from leaves", () => {
-        const tree = makeTreeAlpha();
-        expect(tree.wideUpwardKeys()).toStrictEqual(["alpha/1/1/1", "alpha/1/2", "alpha/1/3/1", "alpha/2/1", "alpha/2/2", "alpha/1/1", "alpha/1", "alpha/1/3", "alpha/2", "alpha"]);
-    });
-
-    test("scoped wideUpwardKeys", () => {
-        const tree = makeTreeAlpha();
-        expect(tree.wideUpwardKeys("alpha/1")).toStrictEqual(["alpha/1/1/1", "alpha/1/2", "alpha/1/3/1", "alpha/1/1", "alpha/1", "alpha/1/3", "alpha"]);
+        test("overlapping scopes", () => {
+            const tree = makeTreeAlpha();
+            expect(tree.wideUpwardKeys("alpha/1", "alpha/1/2")).toStrictEqual(["alpha/1/1/1", "alpha/1/2", "alpha/1/3/1", "alpha/1/1", "alpha/1/3", "alpha/1"]);
+        });
     });
 
     describe("pathKeys", () => {
@@ -627,6 +675,11 @@ describe("Traversal", () => {
     test("scoped leafKeys", () => {
         const tree = makeTreeAlpha();
         expect(tree.leafKeys("alpha/1")).toStrictEqual(["alpha/1/1/1", "alpha/1/2", "alpha/1/3/1"]);
+    });
+
+    test("leafKeys with overlapping scopes", () => {
+        const tree = makeTreeAlpha();
+        expect(tree.leafKeys("alpha/1", "alpha/1/2")).toStrictEqual(["alpha/1/1/1", "alpha/1/2", "alpha/1/3/1"]);
     });
 });
 

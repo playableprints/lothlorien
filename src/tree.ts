@@ -610,11 +610,11 @@ export class Tree<T> implements ITree<T> {
 
     wideKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
         const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
-        const res: string[] = [];
+        const res = new Set<string>();
         const traverse = (keys: string[]) => {
             const next: string[] = [];
             keys.forEach((k) => {
-                res.push(k);
+                res.add(k);
                 next.push(...this.childrenKeys(k));
             });
             if (next.length > 0) {
@@ -622,7 +622,7 @@ export class Tree<T> implements ITree<T> {
             }
         };
         traverse(from);
-        return res;
+        return [...res];
     }
 
     wideValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
@@ -651,13 +651,13 @@ export class Tree<T> implements ITree<T> {
 
     deepKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
         const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
-        const res: string[] = [];
+        const res = new Set<string>();
         const traverse = (key: string) => {
-            res.push(key);
+            res.add(key);
             this.childrenKeys(key).forEach(traverse);
         };
         from.forEach(traverse);
-        return res;
+        return [...res];
     }
 
     deepValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
@@ -685,22 +685,26 @@ export class Tree<T> implements ITree<T> {
     }
 
     wideUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
+        const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
         const visited = new Set<string>();
 
         const traverse = (keys: string[]) => {
             const next: string[] = [];
             keys.forEach((k) => {
                 visited.add(k);
-                const p = this.parentKey(k);
-                if (p !== null && p !== undefined) {
-                    next.push(p);
+                if (!from.includes(k)) {
+                    //stop at origin, please
+                    const p = this.parentKey(k);
+                    if (p !== null && p !== undefined) {
+                        next.push(p);
+                    }
                 }
             });
             if (next.length > 0) {
                 traverse(next);
             }
         };
-        traverse(this.leafKeys(origin, ...moreOrigins));
+        traverse(this.leafKeys(...from));
         return [...visited];
     }
 
@@ -729,15 +733,19 @@ export class Tree<T> implements ITree<T> {
     }
 
     deepUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
+        const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
         const visited = new Set<string>();
-        const traverse = (key: string) => {
-            visited.add(key);
-            const p = this.parentKey(key);
-            if (p !== null && p !== undefined) {
-                traverse(p);
+        const traverse = (k: string) => {
+            visited.add(k);
+            if (!from.includes(k)) {
+                //stop at origin
+                const p = this.parentKey(k);
+                if (p !== null && p !== undefined) {
+                    traverse(p);
+                }
             }
         };
-        this.leafKeys(origin, ...moreOrigins).forEach(traverse);
+        this.leafKeys(...from).forEach(traverse);
         return [...visited];
     }
 
