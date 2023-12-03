@@ -578,7 +578,19 @@ export class Tree<T> implements ITree<T> {
 
     leafKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
         const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
-        return Object.keys(this._store).filter((e) => this._store[e].children.length === 0 || this.ancestorKeys(e).some((a) => from.includes(a)));
+
+        //get all leaves
+        const allLeaves = Object.keys(this._store).filter((a) => this._store[a].children.length === 0);
+
+        //filter by if ancestors is among 'from' list
+        return allLeaves.filter((leafKey) => {
+            for (const ancestor of this.ancestorKeys(leafKey)) {
+                if (from.includes(ancestor)) {
+                    return true;
+                }
+            }
+            return false;
+        });
     }
 
     leafValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
