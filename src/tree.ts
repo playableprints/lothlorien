@@ -1,3 +1,4 @@
+import { Err } from "./errors";
 import { IterableOr, Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper } from "./types/helpers";
 import { ITree } from "./types/itree";
 
@@ -424,7 +425,9 @@ export class Tree<T> implements ITree<T> {
     }
 
     populate<F>(list: Iterable<F>, allocator: (data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void) {
-        const hold: { [key: string]: { key: string; value: T; parent: string | null } } = {};
+        const hold: {
+            [key: string]: { key: string; value: T; parent: string | null };
+        } = {};
 
         // Convert the input data entries into nodes and store them in the 'hold' object
         for (const entry of list) {
@@ -437,6 +440,14 @@ export class Tree<T> implements ITree<T> {
         }
 
         const doAllocation = (k: string) => {
+            if (!hold[k]) {
+                console.error(
+                    `Parent node "${k}" not found.
+Make sure to add all parent nodes. Check the order of the input list.`
+                );
+                throw Err.INCOMPLETE;
+            }
+
             if (!this.has(k)) {
                 const { parent, value } = hold[k];
                 if (parent !== null && !this.has(parent)) {
@@ -634,7 +645,10 @@ export class Tree<T> implements ITree<T> {
     }
 
     widePairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return this.wideKeys(origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return this.wideKeys(origin, ...moreOrigins).map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
     }
 
     reduceWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
@@ -669,7 +683,10 @@ export class Tree<T> implements ITree<T> {
     }
 
     deepPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return this.deepKeys(origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return this.deepKeys(origin, ...moreOrigins).map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
     }
 
     reduceDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
@@ -717,7 +734,10 @@ export class Tree<T> implements ITree<T> {
     }
 
     wideUpwardPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return this.wideUpwardKeys(origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return this.wideUpwardKeys(origin, ...moreOrigins).map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
     }
 
     reduceUpwardsWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
@@ -758,7 +778,10 @@ export class Tree<T> implements ITree<T> {
     }
 
     deepUpwardPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return this.deepUpwardKeys(origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return this.deepUpwardKeys(origin, ...moreOrigins).map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
     }
 
     reduceUpwardsDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
@@ -833,7 +856,10 @@ export class Tree<T> implements ITree<T> {
     }
 
     pathPairs(from: string, to: string): { key: string; value: T }[] {
-        return this.pathKeys(from, to).map((key) => ({ key, value: this._store[key].value }));
+        return this.pathKeys(from, to).map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
     }
 
     reducePath<R = void>(from: string, to: string, reducer: KeyedReducer<T, string, R>, start: R): R {
