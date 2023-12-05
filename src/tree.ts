@@ -1,4 +1,5 @@
 import { HierarchyHelper } from "./hierarchyhelper";
+import { Err } from "./errors";
 import { IterableOr, Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper } from "./types/helpers";
 import { ITree } from "./types/itree";
 
@@ -421,7 +422,9 @@ export class Tree<T> implements ITree<T> {
     }
 
     populate<F>(list: Iterable<F>, allocator: (data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void) {
-        const hold: { [key: string]: { key: string; value: T; parent: string | null } } = {};
+        const hold: {
+            [key: string]: { key: string; value: T; parent: string | null };
+        } = {};
 
         // Convert the input data entries into nodes and store them in the 'hold' object
         for (const entry of list) {
@@ -434,6 +437,14 @@ export class Tree<T> implements ITree<T> {
         }
 
         const doAllocation = (k: string) => {
+            if (!hold[k]) {
+                console.error(
+                    `Parent node "${k}" not found.
+Make sure to add all parent nodes. Check the order of the input list.`
+                );
+                throw Err.INCOMPLETE;
+            }
+
             if (!this.has(k)) {
                 const { parent, value } = hold[k];
                 if (parent !== null && !this.has(parent)) {

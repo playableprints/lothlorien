@@ -1,3 +1,4 @@
+import { Err } from "./errors";
 import { Tree } from "./tree";
 
 const makeTreeAlpha = () => {
@@ -22,6 +23,39 @@ const makeTreeBeta = () => {
     theTree.add("beta/1", "beta", "betaRoot/a1");
     theTree.add("beta/2", "beta", "betaRoot/a2");
     theTree.add("beta/1/1", "beta/1", "betaRoot/a1/b1");
+    return theTree;
+};
+
+const sigmaContent = () => {
+    return [
+        // Root
+        { key: "alpha", parent: null, value: "alphaRoot" },
+        // Spaces
+        { key: "alpha/one 1", parent: "alpha", value: "alphaRoot/a1 one" },
+        {
+            key: "alpha/one 1/one 1",
+            parent: "alpha/one 1",
+            value: "alphaRoot/a1 one/b1 one",
+        },
+        // Special characters
+        {
+            key: "alpha/Special Characters , + _ - ! £ $ % ^ & ( ) ¬ ~ @ [ ] ` { } #",
+            parent: "alpha",
+            value: "alphaRoot/specials",
+        },
+        {
+            key: "alpha/Special Characters , + _ - ! £ $ % ^ & ( ) ¬ ~ @ [ ] ` { } #/one 1",
+            parent: "alpha/Special Characters , + _ - ! £ $ % ^ & ( ) ¬ ~ @ [ ] ` { } #",
+            value: "alphaRoot/specials/one 1",
+        },
+    ];
+};
+
+const makeTree = (content: { key: string; parent: string | null; value: string }[]): Tree<string> => {
+    const theTree = new Tree<string>();
+    content.forEach((c) => {
+        theTree.add(c.key, c.parent, c.value);
+    });
     return theTree;
 };
 
@@ -239,38 +273,8 @@ describe("advanced CRUD operations", () => {
 
             t1.graft(t2, "beta", "alpha/1/3/1");
 
-            expect(t1.deepKeys()).toStrictEqual([
-                "alpha",
-                "alpha/1",
-                "alpha/1/1",
-                "alpha/1/1/1",
-                "alpha/1/2",
-                "alpha/1/3",
-                "alpha/1/3/1",
-                "beta",
-                "beta/1",
-                "beta/1/1",
-                "beta/2",
-                "alpha/2",
-                "alpha/2/1",
-                "alpha/2/2",
-            ]);
-            expect(t1.wideKeys()).toStrictEqual([
-                "alpha",
-                "alpha/1",
-                "alpha/2",
-                "alpha/1/1",
-                "alpha/1/2",
-                "alpha/1/3",
-                "alpha/2/1",
-                "alpha/2/2",
-                "alpha/1/1/1",
-                "alpha/1/3/1",
-                "beta",
-                "beta/1",
-                "beta/2",
-                "beta/1/1",
-            ]);
+            expect(t1.deepKeys()).toStrictEqual(["alpha", "alpha/1", "alpha/1/1", "alpha/1/1/1", "alpha/1/2", "alpha/1/3", "alpha/1/3/1", "beta", "beta/1", "beta/1/1", "beta/2", "alpha/2", "alpha/2/1", "alpha/2/2"]);
+            expect(t1.wideKeys()).toStrictEqual(["alpha", "alpha/1", "alpha/2", "alpha/1/1", "alpha/1/2", "alpha/1/3", "alpha/2/1", "alpha/2/2", "alpha/1/1/1", "alpha/1/3/1", "beta", "beta/1", "beta/2", "beta/1/1"]);
         });
 
         test("onto trunk", () => {
@@ -279,38 +283,8 @@ describe("advanced CRUD operations", () => {
 
             t1.graft(t2, "beta", "alpha/2");
 
-            expect(t1.deepKeys()).toStrictEqual([
-                "alpha",
-                "alpha/1",
-                "alpha/1/1",
-                "alpha/1/1/1",
-                "alpha/1/2",
-                "alpha/1/3",
-                "alpha/1/3/1",
-                "alpha/2",
-                "alpha/2/1",
-                "alpha/2/2",
-                "beta",
-                "beta/1",
-                "beta/1/1",
-                "beta/2",
-            ]);
-            expect(t1.wideKeys()).toStrictEqual([
-                "alpha",
-                "alpha/1",
-                "alpha/2",
-                "alpha/1/1",
-                "alpha/1/2",
-                "alpha/1/3",
-                "alpha/2/1",
-                "alpha/2/2",
-                "beta",
-                "alpha/1/1/1",
-                "alpha/1/3/1",
-                "beta/1",
-                "beta/2",
-                "beta/1/1",
-            ]);
+            expect(t1.deepKeys()).toStrictEqual(["alpha", "alpha/1", "alpha/1/1", "alpha/1/1/1", "alpha/1/2", "alpha/1/3", "alpha/1/3/1", "alpha/2", "alpha/2/1", "alpha/2/2", "beta", "beta/1", "beta/1/1", "beta/2"]);
+            expect(t1.wideKeys()).toStrictEqual(["alpha", "alpha/1", "alpha/2", "alpha/1/1", "alpha/1/2", "alpha/1/3", "alpha/2/1", "alpha/2/2", "beta", "alpha/1/1/1", "alpha/1/3/1", "beta/1", "beta/2", "beta/1/1"]);
         });
     });
 
@@ -328,7 +302,11 @@ describe("advanced CRUD operations", () => {
 
         test("onto leaf; using obj", () => {
             const tree = makeTreeBeta();
-            tree.sprout("beta/2", { "beta/2/1": "foo", "beta/2/2": "bar", "beta/2/3": "bar" });
+            tree.sprout("beta/2", {
+                "beta/2/1": "foo",
+                "beta/2/2": "bar",
+                "beta/2/3": "bar",
+            });
             expect(tree.deepKeys()).toStrictEqual(["beta", "beta/1", "beta/1/1", "beta/2", "beta/2/1", "beta/2/2", "beta/2/3"]);
             expect(tree.wideKeys()).toStrictEqual(["beta", "beta/1", "beta/2", "beta/1/1", "beta/2/1", "beta/2/2", "beta/2/3"]);
         });
@@ -357,7 +335,11 @@ describe("advanced CRUD operations", () => {
 
         test("onto trunk; using obj", () => {
             const tree = makeTreeBeta();
-            tree.sprout("beta", { "beta/3": "foo", "beta/4": "bar", "beta/5": "bar" });
+            tree.sprout("beta", {
+                "beta/3": "foo",
+                "beta/4": "bar",
+                "beta/5": "bar",
+            });
             expect(tree.deepKeys()).toStrictEqual(["beta", "beta/1", "beta/1/1", "beta/2", "beta/3", "beta/4", "beta/5"]);
             expect(tree.wideKeys()).toStrictEqual(["beta", "beta/1", "beta/2", "beta/3", "beta/4", "beta/5", "beta/1/1"]);
         });
@@ -460,10 +442,18 @@ describe("advanced CRUD operations", () => {
                 { key: "alpha", parent: null, value: "alphaRoot" },
                 { key: "alpha/1", parent: "alpha", value: "alphaRoot/a1" },
                 { key: "alpha/1/1", parent: "alpha/1", value: "alphaRoot/a1/b1" },
-                { key: "alpha/1/1/1", parent: "alpha/1/1", value: "alphaRoot/a1/b1/c1" },
+                {
+                    key: "alpha/1/1/1",
+                    parent: "alpha/1/1",
+                    value: "alphaRoot/a1/b1/c1",
+                },
                 { key: "alpha/1/2", parent: "alpha/1", value: "alphaRoot/a1/b2" },
                 { key: "alpha/1/3", parent: "alpha/1", value: "alphaRoot/a1/b3" },
-                { key: "alpha/1/3/1", parent: "alpha/1/3", value: "alphaRoot/a1/b3/c1" },
+                {
+                    key: "alpha/1/3/1",
+                    parent: "alpha/1/3",
+                    value: "alphaRoot/a1/b3/c1",
+                },
                 { key: "alpha/2", parent: "alpha", value: "alphaRoot/c2" },
                 { key: "alpha/2/1", parent: "alpha/2", value: "alphaRoot/a2/b1" },
                 { key: "alpha/2/2", parent: "alpha/2", value: "alphaRoot/a2/b2" },
@@ -475,19 +465,35 @@ describe("advanced CRUD operations", () => {
             expect(tree.deepKeys()).toStrictEqual(alphaPrime.deepKeys());
         });
 
-        test("from list of keys (strings)", () => {
+        test("from list of entries with spaces", () => {
+            const theList = sigmaContent();
+
+            const tree = new Tree<string>();
+            tree.populate(theList, (data) => data);
+            const sigmaPrime = makeTree(sigmaContent());
+            expect(tree.deepKeys()).toStrictEqual(sigmaPrime.deepKeys());
+        });
+
+        test("from list of entries with invalid parents", () => {
             const theList = [
-                "alphaRoot",
-                "alphaRoot/a1",
-                "alphaRoot/a1/b1",
-                "alphaRoot/a1/b1/c1",
-                "alphaRoot/a1/b2",
-                "alphaRoot/a1/b3",
-                "alphaRoot/a1/b3/c1",
-                "alphaRoot/a2",
-                "alphaRoot/a2/b1",
-                "alphaRoot/a2/b2",
+                {
+                    key: "/",
+                    parent: null,
+                    value: "root",
+                },
+                { key: "alpha/", parent: "alpha", value: "alphaRoot" },
             ];
+
+            const populateTree = () => {
+                const tree = new Tree<string>();
+                tree.populate(theList, (data) => data);
+            };
+
+            expect(populateTree).toThrow(Err.INCOMPLETE);
+        });
+
+        test("from list of keys (strings)", () => {
+            const theList = ["alphaRoot", "alphaRoot/a1", "alphaRoot/a1/b1", "alphaRoot/a1/b1/c1", "alphaRoot/a1/b2", "alphaRoot/a1/b3", "alphaRoot/a1/b3/c1", "alphaRoot/a2", "alphaRoot/a2/b1", "alphaRoot/a2/b2"];
 
             const tree = new Tree<string>();
             tree.populate(theList, (input) => {

@@ -1,4 +1,4 @@
-import { Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper } from "./helpers";
+import { Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper, IterableOr } from "./helpers";
 
 export interface ITree<T> {
     /* Basics */
@@ -246,12 +246,23 @@ export interface ITree<T> {
     detach(key: string | null): void;
 
     /**
-     *
      * splits out each subtree as a member of an array
      * @returns {ITree<T>[]} an array of subtrees.
      */
-
     subtrees(): ITree<T>[];
+
+    /**
+     * Empties the whole forest
+     */
+    clear(): void;
+
+    /**
+     * Given a list of nodes, allocate them into the forest.
+     * 
+     * @param {Iterable<F>} list 
+     * @param {(data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void} allocator 
+     */
+    populate<F>(list: Iterable<F>, allocator: (data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void): void;
 
     /* Hierarchy */
 
