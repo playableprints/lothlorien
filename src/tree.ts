@@ -1,3 +1,4 @@
+import { HierarchyHelper } from "./hierarchyhelper";
 import { IterableOr, Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper } from "./types/helpers";
 import { ITree } from "./types/itree";
 
@@ -122,15 +123,11 @@ export class Tree<T> implements ITree<T> {
     }
 
     keyOf(value: T): string | undefined {
-        return Object.values(this._store).find((v) => {
-            return v.value === value;
-        })?.key;
+        return Object.values(this._store).find((v) => v.value === value)?.key;
     }
 
     findKeyOf(discriminator: Discriminator<T>): string | undefined {
-        return Object.values(this._store).find((v) => {
-            return discriminator(v.value);
-        })?.key;
+        return Object.values(this._store).find((v) => discriminator(v.value))?.key;
     }
 
     isRoot(key: string): boolean {
@@ -452,18 +449,7 @@ export class Tree<T> implements ITree<T> {
     /* Hierarchy */
 
     rootKeyOf(key: string): string | undefined {
-        if (this.has(key)) {
-            let k = key;
-            let p = this.parentKey(k);
-            while (p !== null) {
-                if (p === undefined) {
-                    return;
-                }
-                k = p;
-                p = this.parentKey(k);
-            }
-            return k;
-        }
+        return HierarchyHelper.rootKeyOf(this._store, key);
     }
 
     parentKey(key: string): string | null | undefined {
@@ -482,293 +468,193 @@ export class Tree<T> implements ITree<T> {
     }
 
     ancestorKeys(key: string): string[] {
-        const t = this._store[key];
-        const res = [] as string[];
-        if (t && t.parent) {
-            res.push(t.parent);
-            res.push(...this.ancestorKeys(t.parent));
-        }
-        return res;
+        return HierarchyHelper.ancestorKeys(this._store, key);
     }
 
     ancestors(key: string): T[] {
-        return this.ancestorKeys(key).map((k) => this._store[k].value);
+        return HierarchyHelper.ancestorKeys(this._store, key).map((k) => this._store[k].value);
     }
 
     childrenKeys(key: string): string[] {
-        return [...(this._store[key]?.children ?? [])];
+        return HierarchyHelper.childrenKeys(this._store, key);
     }
 
     children(key: string): T[] {
-        return (this._store[key]?.children ?? []).map((k) => this._store[k].value);
+        return HierarchyHelper.childrenKeys(this._store, key).map((k) => this._store[k].value);
     }
 
     siblingKeys(key: string): string[] {
-        if (this.has(key)) {
-            const p = this._store[key].parent;
-            if (p === null) {
-                return this.rootKeys();
-            }
-            return this._store[p].children.filter((a) => a !== key);
-        }
-        return [];
+        return HierarchyHelper.siblingKeys(this._store, key);
     }
 
     siblings(key: string): T[] {
-        if (this.has(key)) {
-            return this.siblingKeys(key).map((k) => this._store[k].value);
-        }
-        return [];
+        return HierarchyHelper.siblingKeys(this._store, key).map((k) => this._store[k].value);
     }
 
     wideDescendentKeys(key: string): string[] {
-        const res: string[] = [];
-        const traverse = (keys: string[]) => {
-            const next: string[] = [];
-            keys.forEach((k) => {
-                res.push(k);
-                next.push(...this.childrenKeys(k));
-            });
-            if (next.length > 0) {
-                traverse(next);
-            }
-        };
-        traverse(this.childrenKeys(key));
-        return res;
+        return HierarchyHelper.wideDescendentKeys(this._store, key);
     }
 
     wideDescendents(key: string): T[] {
-        return this.wideDescendentKeys(key).map((k) => this._store[k].value);
+        return HierarchyHelper.wideDescendentKeys(this._store, key).map((k) => this._store[k].value);
     }
 
     deepDescendentKeys(key: string): string[] {
-        const res: string[] = [];
-        const traverse = (k: string) => {
-            res.push(k);
-            this.childrenKeys(k).forEach(traverse);
-        };
-        this.childrenKeys(key).forEach(traverse);
-        return res;
+        return HierarchyHelper.deepDescendentKeys(this._store, key);
     }
 
     deepDescendents(key: string): T[] {
-        return this.deepDescendentKeys(key).map((k) => this._store[k].value);
+        return HierarchyHelper.deepDescendentKeys(this._store, key).map((k) => this._store[k].value);
     }
 
     /* Traversal */
 
     rootKeys(): string[] {
-        return Object.keys(this._store).filter((a) => this._store[a].parent === null);
+        return HierarchyHelper.rootKeys(this._store);
     }
 
     rootValues(): T[] {
-        return this.rootKeys().map((k) => this._store[k].value);
+        return HierarchyHelper.rootKeys(this._store).map((k) => this._store[k].value);
     }
 
     rootTuples(): [string, T][] {
-        return this.rootKeys().map((k) => [k, this._store[k].value]);
+        return HierarchyHelper.rootKeys(this._store).map((k) => [k, this._store[k].value]);
     }
 
     rootCollection(): { [key: string]: T } {
-        return this.rootKeys().reduce<{ [key: string]: T }>((acc, k) => {
+        return HierarchyHelper.rootKeys(this._store).reduce<{ [key: string]: T }>((acc, k) => {
             acc[k] = this._store[k].value;
             return acc;
         }, {});
     }
 
-    leafKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
-        const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
-
-        //get all leaves
-        const allLeaves = Object.keys(this._store).filter((a) => this._store[a].children.length === 0);
-
-        //filter by if ancestors is among 'from' list
-        return allLeaves.filter((leafKey) => {
-            for (const ancestor of this.ancestorKeys(leafKey)) {
-                if (from.includes(ancestor)) {
-                    return true;
-                }
-            }
-            return false;
-        });
+    leafKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
+        return HierarchyHelper.leafKeys(this._store, origin, ...moreOrigins);
     }
 
     leafValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
-        return this.leafKeys(origin, ...moreOrigins).map((k) => this._store[k].value);
+        return HierarchyHelper.leafKeys(this._store, origin, ...moreOrigins).map((k) => this._store[k].value);
     }
 
     leafTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
-        return this.leafKeys(origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
+        return HierarchyHelper.leafKeys(this._store, origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
     }
 
     leafCollection(origin?: string | string[], ...moreOrigins: string[]): { [key: string]: T } {
-        return this.leafKeys(origin, ...moreOrigins).reduce<{ [key: string]: T }>((acc, k) => {
+        return HierarchyHelper.leafKeys(this._store, origin, ...moreOrigins).reduce<{ [key: string]: T }>((acc, k) => {
             acc[k] = this._store[k].value;
             return acc;
         }, {});
     }
 
-    wideKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
-        const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
-        const res = new Set<string>();
-        const traverse = (keys: string[]) => {
-            const next: string[] = [];
-            keys.forEach((k) => {
-                res.add(k);
-                next.push(...this.childrenKeys(k));
-            });
-            if (next.length > 0) {
-                traverse(next);
-            }
-        };
-        traverse(from);
-        return [...res];
+    wideKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
+        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins);
     }
 
     wideValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
-        return this.wideKeys(origin, ...moreOrigins).map((k) => this._store[k].value);
+        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins).map((k) => this._store[k].value);
     }
 
     wideTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
-        return this.wideKeys(origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
+        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
     }
 
     widePairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return this.wideKeys(origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
     }
 
     reduceWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
-        return this.wideKeys(origin, ...moreOrigins).reduce((acc, key, i) => {
+        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins).reduce((acc, key, i) => {
             return reducer(this._store[key].value, key, i, acc);
         }, start);
     }
 
     mapWide<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
-        return this.wideKeys(origin, ...moreOrigins).map<R>((key, i) => {
+        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins).map<R>((key, i) => {
             return mapper(this._store[key].value, key, i);
         });
     }
 
-    deepKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
-        const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
-        const res = new Set<string>();
-        const traverse = (key: string) => {
-            res.add(key);
-            this.childrenKeys(key).forEach(traverse);
-        };
-        from.forEach(traverse);
-        return [...res];
+    deepKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
+        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins);
     }
 
     deepValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
-        return this.deepKeys(origin, ...moreOrigins).map((k) => this._store[k].value);
+        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins).map((k) => this._store[k].value);
     }
 
     deepTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
-        return this.deepKeys(origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
+        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
     }
 
     deepPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return this.deepKeys(origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
     }
 
     reduceDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
-        return this.deepKeys(origin, ...moreOrigins).reduce((acc, key, i) => {
+        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins).reduce((acc, key, i) => {
             return reducer(this._store[key].value, key, i, acc);
         }, start);
     }
 
     mapDeep<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
-        return this.deepKeys(origin, ...moreOrigins).map<R>((key, i) => {
+        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins).map<R>((key, i) => {
             return mapper(this._store[key].value, key, i);
         });
     }
 
     wideUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
-        const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
-        const visited = new Set<string>();
-
-        const traverse = (keys: string[]) => {
-            const next: string[] = [];
-            keys.forEach((k) => {
-                visited.add(k);
-                if (!from.includes(k)) {
-                    //stop at origin, please
-                    const p = this.parentKey(k);
-                    if (p !== null && p !== undefined) {
-                        next.push(p);
-                    }
-                }
-            });
-            if (next.length > 0) {
-                traverse(next);
-            }
-        };
-        traverse(this.leafKeys(...from));
-        return [...visited];
+        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins);
     }
 
     wideUpwardValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
-        return this.wideUpwardKeys(origin, ...moreOrigins).map((k) => this._store[k].value);
+        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins).map((k) => this._store[k].value);
     }
 
     wideUpwardTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
-        return this.wideUpwardKeys(origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
+        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
     }
 
     wideUpwardPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return this.wideUpwardKeys(origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
     }
 
     reduceUpwardsWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
-        return this.wideUpwardKeys(origin, ...moreOrigins).reduce((acc, key, i) => {
+        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins).reduce((acc, key, i) => {
             return reducer(this._store[key].value, key, i, acc);
         }, start);
     }
 
     mapUpwardsWide<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
-        return this.wideUpwardKeys(origin, ...moreOrigins).map<R>((key, i) => {
+        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins).map<R>((key, i) => {
             return mapper(this._store[key].value, key, i);
         });
     }
 
     deepUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
-        const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
-        const visited = new Set<string>();
-        const traverse = (k: string) => {
-            visited.add(k);
-            if (!from.includes(k)) {
-                //stop at origin
-                const p = this.parentKey(k);
-                if (p !== null && p !== undefined) {
-                    traverse(p);
-                }
-            }
-        };
-        this.leafKeys(...from).forEach(traverse);
-        return [...visited];
+        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins);
     }
 
     deepUpwardValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
-        return this.deepUpwardKeys(origin, ...moreOrigins).map((k) => this._store[k].value);
+        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins).map((k) => this._store[k].value);
     }
 
     deepUpwardTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
-        return this.deepUpwardKeys(origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
+        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
     }
 
     deepUpwardPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return this.deepUpwardKeys(origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
     }
 
     reduceUpwardsDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
-        return this.deepUpwardKeys(origin, ...moreOrigins).reduce((acc, key, i) => {
+        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins).reduce((acc, key, i) => {
             return reducer(this._store[key].value, key, i, acc);
         }, start);
     }
 
     mapUpwardsDeep<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
-        return this.deepUpwardKeys(origin, ...moreOrigins).map<R>((key, i) => {
+        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins).map<R>((key, i) => {
             return mapper(this._store[key].value, key, i);
         });
     }
@@ -777,73 +663,29 @@ export class Tree<T> implements ITree<T> {
 
     // TODO: should unfindable paths return undefined rather than an empty array?
     pathKeys(from: string, to: string): string[] {
-        if (from === to) {
-            return [from];
-        }
-        let fromHead = this._store[from];
-        let toHead = this._store[to];
-        if (!fromHead || !toHead) {
-            return [] as string[];
-        }
-        let fromRoot = fromHead.parent === null ? fromHead.key : null;
-        let toRoot = toHead.parent === null ? toHead.key : null;
-        const pathFrom = [from];
-        const pathTo = [to];
-        let fromSearchlight = -1;
-        let toSearchlight = -1;
-
-        while (fromSearchlight === -1 || toSearchlight === -1) {
-            if (fromRoot && toRoot) {
-                if (fromRoot !== toRoot) {
-                    // not the same root
-                    return [];
-                }
-                return [...pathFrom.slice(0, -1), toRoot, ...pathTo.slice(0, -1).reverse()];
-            }
-            if (!fromRoot) {
-                //from-leg is still searching up the tree
-                fromSearchlight = pathTo.indexOf(fromHead.key);
-                if (fromHead.parent !== null) {
-                    pathFrom.push(fromHead.parent);
-                    fromHead = this._store[fromHead.parent];
-                }
-                //stop searching upwards if you've found root
-            }
-            if (!toRoot) {
-                //to-leg is still searching up the tree
-                toSearchlight = pathFrom.indexOf(toHead.key);
-                if (toHead.parent !== null) {
-                    pathTo.push(toHead.parent);
-                    toHead = this._store[toHead.parent];
-                }
-                //stop searching upwards if you've found root
-            }
-            toRoot = toHead.parent === null ? toHead.key : toRoot;
-            fromRoot = fromHead.parent === null ? fromHead.key : fromRoot;
-        }
-        return [...pathFrom.slice(0, toSearchlight), ...pathTo.slice(0, fromSearchlight).reverse()];
+        return HierarchyHelper.pathKeys(this._store, from, to);
     }
 
     pathValues(from: string, to: string): T[] {
-        return this.pathKeys(from, to).map((each) => this._store[each].value);
+        return HierarchyHelper.pathKeys(this._store, from, to).map((each) => this._store[each].value);
     }
 
     pathTuples(from: string, to: string): [string, T][] {
-        return this.pathKeys(from, to).map((each) => [each, this._store[each].value]);
+        return HierarchyHelper.pathKeys(this._store, from, to).map((each) => [each, this._store[each].value]);
     }
 
     pathPairs(from: string, to: string): { key: string; value: T }[] {
-        return this.pathKeys(from, to).map((key) => ({ key, value: this._store[key].value }));
+        return HierarchyHelper.pathKeys(this._store, from, to).map((key) => ({ key, value: this._store[key].value }));
     }
 
     reducePath<R = void>(from: string, to: string, reducer: KeyedReducer<T, string, R>, start: R): R {
-        return this.pathKeys(from, to).reduce((acc, key, i) => {
+        return HierarchyHelper.pathKeys(this._store, from, to).reduce((acc, key, i) => {
             return reducer(this._store[key].value, key, i, acc);
         }, start);
     }
 
     mapPath<R = void>(from: string, to: string, mapper: KeyedMapper<T, string, R>): R[] {
-        return this.pathKeys(from, to).map((key, i) => {
+        return HierarchyHelper.pathKeys(this._store, from, to).map((key, i) => {
             return mapper(this._store[key].value, key, i);
         });
     }

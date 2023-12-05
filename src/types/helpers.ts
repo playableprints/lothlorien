@@ -94,3 +94,7 @@ export type TreeEntry<T> = {
     children: string[];
     value: T;
 };
+
+export type TreeStore<T> = {
+    [key: string]: TreeEntry<T>;
+};
