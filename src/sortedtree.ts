@@ -262,7 +262,7 @@ export class SortedTree<T> extends Tree<T> implements ISortedTree<T> {
         return res;
     }
 
-    override truncate(key: string): { [key: string]: T } | undefined {
+    override truncate(key: string): { [key: string]: T } {
         const res = super.truncate(key);
         if (res) {
             const remKeys = Object.keys(res);
@@ -305,7 +305,7 @@ export class SortedTree<T> extends Tree<T> implements ISortedTree<T> {
         return res;
     }
 
-    override condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => false | TreeEntry<T>): void {
+    override condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => void | { key: string; value: T }): void {
         super.condense(merger);
         this.sort();
     }

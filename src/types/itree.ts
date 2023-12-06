@@ -198,7 +198,7 @@ export interface ITree<T> {
      * @returns {{[key: string]: T} | undefined} An object representing the truncated subtree, where the keys are the keys of the nodes,
      * and the values are the values associated with each node (or undefined if the node was not present)
      */
-    truncate(key: string): { [key: string]: T } | undefined;
+    truncate(key: string): { [key: string]: T };
 
     /**
      * Removes a node so long as it has no children, otherwise, does nothing.
@@ -235,9 +235,9 @@ export interface ITree<T> {
      * The merger function takes two adjacent nodes 'a' and 'b', and if applicable, returns a new merged node 'r'.
      * If the merger function returns false, no merge is performed between 'a' and 'b'.
      *
-     * @param {(a: TreeEntry<T>, b: TreeEntry<T>) => TreeEntry<T> | false} merger - The function to merge adjacent nodes with single children.
+     * @param {(a: TreeEntry<T>, b: TreeEntry<T>) => { key: string, value: T } | void} merger - The function to merge adjacent nodes with single children.
      */
-    condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => TreeEntry<T> | false): void;
+    condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => void | { key: string; value: T }): void;
 
     /**
      * Detaches a part of a tree at the given key, and makes that node the root of a new subtree within this tree.
@@ -258,9 +258,9 @@ export interface ITree<T> {
 
     /**
      * Given a list of nodes, allocate them into the forest.
-     * 
-     * @param {Iterable<F>} list 
-     * @param {(data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void} allocator 
+     *
+     * @param {Iterable<F>} list
+     * @param {(data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void} allocator
      */
     populate<F>(list: Iterable<F>, allocator: (data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void): void;
 

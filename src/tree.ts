@@ -1,7 +1,6 @@
-import { HierarchyHelper } from "./hierarchyhelper";
-import { Err } from "./errors";
-import { IterableOr, Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper } from "./types/helpers";
+import { IterableOr, Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper, TreeStore } from "./types/helpers";
 import { ITree } from "./types/itree";
+import { TreeOps } from "./treeops";
 
 export class Tree<T> implements ITree<T> {
     protected _store: {
@@ -112,592 +111,357 @@ export class Tree<T> implements ITree<T> {
     /* Basics */
 
     has(key: string): boolean {
-        return key in this._store;
+        return TreeOps.has(this._store, key);
     }
 
     contains(value: T): boolean {
-        return Object.values(this._store).some((e) => e.value === value);
+        return TreeOps.contains(this._store, value);
     }
 
     some(discriminator: Discriminator<T>): boolean {
-        return Object.values(this._store).some((e) => discriminator(e.value));
+        return TreeOps.some(this._store, discriminator);
     }
 
     keyOf(value: T): string | undefined {
-        return Object.values(this._store).find((v) => v.value === value)?.key;
+        return TreeOps.keyOf(this._store, value);
     }
 
     findKeyOf(discriminator: Discriminator<T>): string | undefined {
-        return Object.values(this._store).find((v) => discriminator(v.value))?.key;
+        return TreeOps.findKeyOf(this._store, discriminator);
     }
 
     isRoot(key: string): boolean {
-        return this._store[key]?.parent === null;
+        return TreeOps.isRoot(this._store, key);
     }
 
     isLeaf(key: string): boolean {
-        return this.has(key) ? (this._store[key]?.children ?? []).length === 0 : false;
+        return TreeOps.isLeaf(this._store, key);
     }
 
     get(key: string): T | undefined {
-        return this._store[key]?.value;
+        return TreeOps.get(this._store, key);
     }
 
     depth(key: string): number {
-        return this.ancestorKeys(key).length;
+        return TreeOps.depth(this._store, key);
     }
 
     size(): number {
-        return Object.keys(this._store).length;
+        return TreeOps.size(this._store);
     }
 
     subtreeCount(): number {
-        return this.rootKeys().length;
+        return TreeOps.subtreeCount(this._store);
+    }
+
+    subtrees(): ITree<T>[] {
+        return TreeOps.subtrees(this._store, () => new Tree<T>());
     }
 
     /* Add / Edit / Remove */
 
     add(key: string, parent: string | null, value: T): void {
-        if (!this.has(key)) {
-            if (parent === null) {
-                this._store[key] = {
-                    key,
-                    parent: null,
-                    children: [],
-                    value,
-                };
-            } else if (this.has(parent)) {
-                this._store[key] = {
-                    key,
-                    parent,
-                    children: [],
-                    value,
-                };
-                this._store[parent].children.push(key);
-            } else {
-                throw `invalid parent '${parent}' when inserting key '${key}'`;
-            }
-        }
+        this._store = TreeOps.add(this._store, key, parent, value);
     }
 
     addRoot(key: string, value: T): void {
-        this.add(key, null, value);
+        this._store = TreeOps.addRoot(this._store, key, value);
     }
 
     addLeaf(key: string, parent: string, value: T): void {
-        this.add(key, parent, value);
+        this._store = TreeOps.addLeaf(this._store, key, parent, value);
     }
 
-    update(key: string, value: T | Updater<T>): void {
-        if (this.has(key)) {
-            const res = this._store[key].value;
-            this._store[key].value = typeof value === "function" ? (value as Updater<T>)(res) : value;
-        }
+    update(key: string, value: T): void {
+        this._store = TreeOps.update(this._store, key, value);
     }
 
     updateWith(key: string, updater: Updater<T>): void {
-        if (this.has(key)) {
-            const res = this._store[key].value;
-            this._store[key].value = updater(res);
-        }
+        this._store = TreeOps.updateWith(this._store, key, updater);
     }
 
     upsert(key: string, parent: string | null, value: T): void {
-        if (this.has(key)) {
-            this._store[key].value = value;
-        } else {
-            this.add(key, parent, value);
-        }
+        this._store = TreeOps.upsert(this._store, key, parent, value);
     }
 
     upsertWith(key: string, parent: string | null, updater: Updater<T | undefined, T>): void {
-        if (this.has(key)) {
-            const prev = this._store[key].value;
-            this._store[key].value = updater(prev);
-        } else {
-            this.add(key, parent, updater(undefined));
-        }
-    }
-
-    emplace(key: string, parent: string | null, value: T): void {
-        if (this.has(key)) {
-            this.move(key, parent);
-            this._store[key].value = value;
-        } else {
-            this.add(key, parent, value);
-        }
-    }
-
-    emplaceWith(key: string, parent: string | null, updater: Updater<T | undefined, T>): void {
-        if (this.has(key)) {
-            this.move(key, parent);
-            const prev = this._store[key].value;
-            this._store[key].value = updater(prev);
-        } else {
-            this.add(key, parent, updater(undefined));
-        }
+        this._store = TreeOps.upsertWith(this._store, key, parent, updater);
     }
 
     move(key: string, parent: string | null): void {
-        if (this.has(key) && (parent === null || this.has(parent))) {
-            const op = this._store[key].parent;
-            if (op !== null) {
-                this._store[op].children = this._store[op].children.filter((k) => k !== key);
-            }
-            this._store[key].parent = parent;
-            if (parent !== null) {
-                this._store[parent].children.push(key);
-            }
-        }
+        this._store = TreeOps.move(this._store, key, parent);
+    }
+
+    emplace(key: string, parent: string | null, value: T): void {
+        this._store = TreeOps.emplace(this._store, key, parent, value);
+    }
+
+    emplaceWith(key: string, parent: string | null, updater: Updater<T | undefined, T>): void {
+        this._store = TreeOps.emplaceWith(this._store, key, parent, updater);
     }
 
     trim(key: string): T | undefined {
-        if (this.has(key)) {
-            if (this._store[key].children.length === 0) {
-                const prev = this._store[key].value;
-                const parent = this._store[key].parent;
-                if (parent !== null) {
-                    this._store[parent].children = this._store[parent].children.filter((k) => k !== key);
-                }
-                delete this._store[key];
-                return prev;
-            }
-        }
-        return undefined;
+        const [res, newStore] = TreeOps.trim(this._store, key);
+        this._store = newStore;
+        return res;
     }
 
     graft(sapling: ITree<T>, saplingRoot: string, graftPoint: string): void {
-        if (sapling.has(saplingRoot) && this.has(graftPoint)) {
-            const r = sapling.get(saplingRoot);
-            this.add(saplingRoot, graftPoint, r!);
-            sapling.childrenKeys(saplingRoot).forEach((cid) => {
-                this.graft(sapling, cid, saplingRoot);
-            });
-        }
+        this._store = TreeOps.graft(this._store, sapling, saplingRoot, graftPoint);
     }
 
     sprout(key: string, generation: Iterable<[string, T]> | { [key: string]: T } | Iterable<{ key: string; value: T }>): void {
-        if (this.has(key)) {
-            if (Symbol.iterator in generation) {
-                for (const entry of generation) {
-                    if (Array.isArray(entry)) {
-                        this.add(entry[0], key, entry[1]);
-                    } else {
-                        this.add(entry.key, key, entry.value);
-                    }
-                }
-            } else {
-                Object.entries(generation).forEach(([k, p]) => {
-                    this.add(k, key, p);
-                });
-            }
-        }
+        this._store = TreeOps.sprout(this._store, key, generation);
     }
 
-    truncate(key: string): { [key: string]: T } | undefined {
-        if (this.has(key)) {
-            const res = this.wideDescendentKeys(key).reduce<{ [key: string]: T }>(
-                (acc, cid) => {
-                    acc[cid] = this._store[cid].value;
-                    return acc;
-                },
-                { [key]: this._store[key].value }
-            );
-            const n = this._store[key];
-            n.children.forEach(this.truncate);
-            if (n.parent !== null) {
-                this._store[n.parent].children = this._store[n.parent].children.filter((cid) => cid !== key);
-            }
-            delete this._store[key];
-            return res;
-        }
+    truncate(key: string): { [key: string]: T } {
+        const [res, newStore] = TreeOps.truncate(this._store, key);
+        this._store = newStore;
+        return res;
     }
 
     pluck(key: string): T | undefined {
-        if (this.has(key)) {
-            const n = this._store[key];
-            n.children.forEach((cid) => {
-                this._store[cid].parent = null;
-            });
-            if (n.parent !== null) {
-                this._store[n.parent].children = this._store[n.parent].children.filter((a) => a !== key);
-            }
-            delete this._store[key];
-            return n.value;
-        }
+        const [res, newStore] = TreeOps.pluck(this._store, key);
+        this._store = newStore;
+        return res;
     }
 
     prune(key: string): ITree<T> {
-        const res = new Tree<T>();
-        const migrate = (k: string) => {
-            const { parent, children, value } = this._store[k];
-            res.add(k, k === key ? null : parent, value);
-            children.forEach(migrate);
-            delete this._store[k];
-        };
-        const pKey = this.parentKey(key);
-        if (pKey !== undefined && pKey !== null) {
-            this._store[pKey].children = this._store[pKey].children.filter((k) => k !== key);
-        }
-        migrate(key);
+        const [res, newStore] = TreeOps.prune(this._store, new Tree<T>(), key);
+        this._store = newStore;
         return res;
     }
 
     splice(key: string): T | undefined {
-        if (this.has(key)) {
-            const n = this._store[key];
-            const p = n.parent;
-            if (p !== null) {
-                this._store[p].children = this._store[p].children.filter((k) => k !== key);
-            }
-            n.children.forEach((cId) => {
-                this._store[cId].parent = p;
-                if (p !== null) {
-                    this._store[p].children.push(cId);
-                }
-            });
-            delete this._store[key];
-            return n.value;
-        }
+        const [res, newStore] = TreeOps.splice(this._store, key);
+        this._store = newStore;
+        return res;
     }
 
-    condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => TreeEntry<T> | false): void {
-        const doMerge = (aKey: string) => {
-            const a = this._store[aKey];
-            if (a.children.length === 1) {
-                const bKey = a.children[0];
-                const b = this._store[bKey];
-                const r = merger(a, b);
-                if (r !== false) {
-                    // If 'merger' returns a new node, replace a and b with the new node in 'hold'
-                    delete this._store[aKey];
-                    delete this._store[bKey];
-                    this._store[r.key] = r;
-
-                    // Update parent-child relationship for the merged node
-                    if (a.parent && this._store[a.parent]) {
-                        this._store[a.parent].children = [...this._store[a.parent].children.filter((t) => t !== aKey), r.key];
-                    }
-                    doMerge(r.key);
-                } else {
-                    doMerge(bKey); // Continue merging recursively for b's children
-                }
-            } else {
-                // If a has more than one child, recursively merge children
-                a.children.forEach(doMerge);
-            }
-        };
-        // to de determined: should this be on rootKeys or rootKeys.children...
-        this.rootKeys().forEach(doMerge);
+    condense(condenser: (a: TreeEntry<T>, b: TreeEntry<T>) => { key: string; value: T } | void): void {
+        this._store = TreeOps.condense(this._store, condenser);
     }
 
     detach(key: string | null): void {
-        if (key !== null) {
-            const p = this._store[key].parent;
-            if (p !== null) {
-                this._store[p].children = this._store[p].children.filter((k) => k !== key);
-            }
-            this._store[key].parent = null;
-        }
+        this._store = TreeOps.detach(this._store, key);
     }
 
-    subtrees(): Tree<T>[] {
-        return this.rootKeys().reduce<Tree<T>[]>((acc, rootKey) => {
-            const allKeys = this.deepDescendentKeys(rootKey);
-            const nTree = new Tree<T>();
-            nTree._store = {
-                [rootKey]: this._store[rootKey],
-                ...allKeys.reduce<{ [key: string]: TreeEntry<T> }>((acc2, key) => {
-                    acc2[key] = this._store[key];
-                    return acc2;
-                }, {}),
-            };
-            acc.push(nTree);
-            return acc;
-        }, []);
-    }
-
+    // the most assinine thing I've written....
     clear() {
-        this._store = {};
+        this._store = TreeOps.clear(this._store);
     }
 
     populate<F>(list: Iterable<F>, allocator: (data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void) {
-        const hold: {
-            [key: string]: { key: string; value: T; parent: string | null };
-        } = {};
-
-        // Convert the input data entries into nodes and store them in the 'hold' object
-        for (const entry of list) {
-            const each = allocator(entry);
-            if (each) {
-                for (const n of Symbol.iterator in each ? each : [each]) {
-                    hold[n.key] = n;
-                }
-            }
-        }
-
-        const doAllocation = (k: string) => {
-            if (!hold[k]) {
-                console.error(
-                    `Parent node "${k}" not found.
-Make sure to add all parent nodes. Check the order of the input list.`
-                );
-                throw Err.INCOMPLETE;
-            }
-
-            if (!this.has(k)) {
-                const { parent, value } = hold[k];
-                if (parent !== null && !this.has(parent)) {
-                    doAllocation(parent);
-                }
-                this.add(k, parent, value);
-            }
-        };
-
-        Object.keys(hold).forEach(doAllocation);
+        this._store = TreeOps.populate<F, T>(this._store, list, allocator);
     }
 
     /* Hierarchy */
 
     rootKeyOf(key: string): string | undefined {
-        return HierarchyHelper.rootKeyOf(this._store, key);
+        return TreeOps.rootKeyOf(this._store, key);
     }
 
     parentKey(key: string): string | null | undefined {
-        if (this.has(key)) {
-            return this._store[key].parent;
-        }
+        return TreeOps.parentKey(this._store, key);
     }
 
     parent(key: string): T | undefined {
-        if (this.has(key)) {
-            const pid = this.parentKey(key)!;
-            if (pid !== null) {
-                return this.get(pid);
-            }
-        }
+        return TreeOps.parent(this._store, key);
     }
 
     ancestorKeys(key: string): string[] {
-        return HierarchyHelper.ancestorKeys(this._store, key);
+        return TreeOps.ancestorKeys(this._store, key);
     }
 
     ancestors(key: string): T[] {
-        return HierarchyHelper.ancestorKeys(this._store, key).map((k) => this._store[k].value);
+        return TreeOps.ancestorKeys(this._store, key).map((k) => this._store[k].value);
     }
 
     childrenKeys(key: string): string[] {
-        return HierarchyHelper.childrenKeys(this._store, key);
+        return TreeOps.childrenKeys(this._store, key);
     }
 
     children(key: string): T[] {
-        return HierarchyHelper.childrenKeys(this._store, key).map((k) => this._store[k].value);
+        return TreeOps.childrenKeys(this._store, key).map((k) => this._store[k].value);
     }
 
     siblingKeys(key: string): string[] {
-        return HierarchyHelper.siblingKeys(this._store, key);
+        return TreeOps.siblingKeys(this._store, key);
     }
 
     siblings(key: string): T[] {
-        return HierarchyHelper.siblingKeys(this._store, key).map((k) => this._store[k].value);
+        return TreeOps.siblingKeys(this._store, key).map((k) => this._store[k].value);
     }
 
     wideDescendentKeys(key: string): string[] {
-        return HierarchyHelper.wideDescendentKeys(this._store, key);
+        return TreeOps.wideDescendentKeys(this._store, key);
     }
 
     wideDescendents(key: string): T[] {
-        return HierarchyHelper.wideDescendentKeys(this._store, key).map((k) => this._store[k].value);
+        return TreeOps.wideDescendentKeys(this._store, key).map((k) => this._store[k].value);
     }
 
     deepDescendentKeys(key: string): string[] {
-        return HierarchyHelper.deepDescendentKeys(this._store, key);
+        return TreeOps.deepDescendentKeys(this._store, key);
     }
 
     deepDescendents(key: string): T[] {
-        return HierarchyHelper.deepDescendentKeys(this._store, key).map((k) => this._store[k].value);
+        return TreeOps.deepDescendentKeys(this._store, key).map((k) => this._store[k].value);
     }
 
     /* Traversal */
 
     rootKeys(): string[] {
-        return HierarchyHelper.rootKeys(this._store);
+        return TreeOps.rootKeys(this._store);
     }
 
     rootValues(): T[] {
-        return HierarchyHelper.rootKeys(this._store).map((k) => this._store[k].value);
+        return TreeOps.rootValues(this._store);
     }
 
     rootTuples(): [string, T][] {
-        return HierarchyHelper.rootKeys(this._store).map((k) => [k, this._store[k].value]);
+        return TreeOps.rootTuples(this._store);
     }
 
     rootCollection(): { [key: string]: T } {
-        return HierarchyHelper.rootKeys(this._store).reduce<{ [key: string]: T }>((acc, k) => {
-            acc[k] = this._store[k].value;
-            return acc;
-        }, {});
+        return TreeOps.rootCollection(this._store);
     }
 
     leafKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
-        return HierarchyHelper.leafKeys(this._store, origin, ...moreOrigins);
+        return TreeOps.leafKeys(this._store, origin, ...moreOrigins);
     }
 
     leafValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
-        return HierarchyHelper.leafKeys(this._store, origin, ...moreOrigins).map((k) => this._store[k].value);
+        return TreeOps.leafValues(this._store, origin, ...moreOrigins);
     }
 
     leafTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
-        return HierarchyHelper.leafKeys(this._store, origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
+        return TreeOps.leafTuples(this._store, origin, ...moreOrigins);
     }
 
     leafCollection(origin?: string | string[], ...moreOrigins: string[]): { [key: string]: T } {
-        return HierarchyHelper.leafKeys(this._store, origin, ...moreOrigins).reduce<{ [key: string]: T }>((acc, k) => {
-            acc[k] = this._store[k].value;
-            return acc;
-        }, {});
+        return TreeOps.leafCollection(this._store, origin, ...moreOrigins);
     }
 
     wideKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
-        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins);
+        return TreeOps.wideKeys(this._store, origin, ...moreOrigins);
     }
 
     wideValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
-        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins).map((k) => this._store[k].value);
+        return TreeOps.wideValues(this._store, origin, ...moreOrigins);
     }
 
     wideTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
-        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
+        return TreeOps.wideTuples(this._store, origin, ...moreOrigins);
     }
 
     widePairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return TreeOps.widePairs(this._store, origin, ...moreOrigins);
     }
 
     reduceWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
-        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins).reduce((acc, key, i) => {
-            return reducer(this._store[key].value, key, i, acc);
-        }, start);
+        return TreeOps.reduceWide(this._store, reducer, start, origin, ...moreOrigins);
     }
 
     mapWide<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
-        return HierarchyHelper.wideKeys(this._store, origin, ...moreOrigins).map<R>((key, i) => {
-            return mapper(this._store[key].value, key, i);
-        });
+        return TreeOps.mapWide<R, T>(this._store, mapper, origin, ...moreOrigins);
     }
 
     deepKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
-        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins);
+        return TreeOps.deepKeys(this._store, origin, ...moreOrigins);
     }
 
     deepValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
-        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins).map((k) => this._store[k].value);
+        return TreeOps.deepValues(this._store, origin, ...moreOrigins);
     }
 
     deepTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
-        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
+        return TreeOps.deepTuples(this._store, origin, ...moreOrigins);
     }
 
     deepPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return TreeOps.deepPairs(this._store, origin, ...moreOrigins);
     }
 
     reduceDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
-        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins).reduce((acc, key, i) => {
-            return reducer(this._store[key].value, key, i, acc);
-        }, start);
+        return TreeOps.reduceDeep(this._store, reducer, start, origin, ...moreOrigins);
     }
 
     mapDeep<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
-        return HierarchyHelper.deepKeys(this._store, origin, ...moreOrigins).map<R>((key, i) => {
-            return mapper(this._store[key].value, key, i);
-        });
+        return TreeOps.mapDeep(this._store, mapper, origin, ...moreOrigins);
     }
 
     wideUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
-        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins);
+        return TreeOps.wideUpwardKeys(this._store, origin, ...moreOrigins);
     }
 
     wideUpwardValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
-        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins).map((k) => this._store[k].value);
+        return TreeOps.wideUpwardValues(this._store, origin, ...moreOrigins);
     }
 
     wideUpwardTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
-        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
+        return TreeOps.wideUpwardTuples(this._store, origin, ...moreOrigins);
     }
 
     wideUpwardPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return TreeOps.wideUpwardPairs(this._store, origin, ...moreOrigins);
     }
 
     reduceUpwardsWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
-        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins).reduce((acc, key, i) => {
-            return reducer(this._store[key].value, key, i, acc);
-        }, start);
+        return TreeOps.reduceUpwardsWide(this._store, reducer, start, origin, ...moreOrigins);
     }
 
     mapUpwardsWide<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
-        return HierarchyHelper.wideUpwardKeys(this._store, origin, ...moreOrigins).map<R>((key, i) => {
-            return mapper(this._store[key].value, key, i);
-        });
+        return TreeOps.mapUpwardsWide(this._store, mapper, origin, ...moreOrigins);
     }
 
     deepUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
-        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins);
+        return TreeOps.deepUpwardKeys(this._store, origin, ...moreOrigins);
     }
 
     deepUpwardValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
-        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins).map((k) => this._store[k].value);
+        return TreeOps.deepUpwardValues(this._store, origin, ...moreOrigins);
     }
 
     deepUpwardTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
-        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
+        return TreeOps.deepUpwardTuples(this._store, origin, ...moreOrigins);
     }
 
     deepUpwardPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
-        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins).map((key) => ({ key, value: this._store[key].value }));
+        return TreeOps.deepUpwardPairs(this._store, origin, ...moreOrigins);
     }
 
     reduceUpwardsDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
-        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins).reduce((acc, key, i) => {
-            return reducer(this._store[key].value, key, i, acc);
-        }, start);
+        return TreeOps.reduceUpwardsDeep(this._store, reducer, start, origin, ...moreOrigins);
     }
 
     mapUpwardsDeep<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
-        return HierarchyHelper.deepUpwardKeys(this._store, origin, ...moreOrigins).map<R>((key, i) => {
-            return mapper(this._store[key].value, key, i);
-        });
+        return TreeOps.mapUpwardsDeep(this._store, mapper, origin, ...moreOrigins);
     }
 
     /* Paths */
 
-    // TODO: should unfindable paths return undefined rather than an empty array?
     pathKeys(from: string, to: string): string[] {
-        return HierarchyHelper.pathKeys(this._store, from, to);
+        return TreeOps.pathKeys(this._store, from, to);
     }
 
     pathValues(from: string, to: string): T[] {
-        return HierarchyHelper.pathKeys(this._store, from, to).map((each) => this._store[each].value);
+        return TreeOps.pathValues(this._store, from, to);
     }
 
     pathTuples(from: string, to: string): [string, T][] {
-        return HierarchyHelper.pathKeys(this._store, from, to).map((each) => [each, this._store[each].value]);
+        return TreeOps.pathTuples(this._store, from, to);
     }
 
     pathPairs(from: string, to: string): { key: string; value: T }[] {
-        return HierarchyHelper.pathKeys(this._store, from, to).map((key) => ({ key, value: this._store[key].value }));
+        return TreeOps.pathPairs(this._store, from, to);
     }
 
     reducePath<R = void>(from: string, to: string, reducer: KeyedReducer<T, string, R>, start: R): R {
-        return HierarchyHelper.pathKeys(this._store, from, to).reduce((acc, key, i) => {
-            return reducer(this._store[key].value, key, i, acc);
-        }, start);
+        return TreeOps.reducePath(this._store, from, to, reducer, start);
     }
 
     mapPath<R = void>(from: string, to: string, mapper: KeyedMapper<T, string, R>): R[] {
-        return HierarchyHelper.pathKeys(this._store, from, to).map((key, i) => {
-            return mapper(this._store[key].value, key, i);
-        });
+        return TreeOps.mapPath(this._store, from, to, mapper);
     }
 }

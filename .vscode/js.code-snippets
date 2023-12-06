@@ -2,5 +2,31 @@
     "Bind Class Methods": {
         "prefix": ["bind"],
         "body": ["this.$1 = this.$1.bind(this);"]
+    },
+    "Immutable Method": {
+        "prefix": ["$immutable"],
+        "body": [
+            "export const $1 = <T>(store: TreeStore<T>, $2): TreeStore<T> => {",
+            "   $3"
+            "};"
+        ]
+    },
+    "Check for Parent": {
+        "prefix": ["$parent"],
+        "body": [
+            "if (parent !== null && !(parent in store)) {",
+            "   // invalid parent",
+            "   $1"
+            "}"
+        ]
+    },
+    "Check for Key": {
+        "prefix": ["$key"],
+        "body": [
+            "if (!(key in store)) {",
+            "   // no such key",
+            "   $1"
+            "}"
+        ]
     }
 }
