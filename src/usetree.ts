@@ -1,17 +1,26 @@
 import { useRef, useState, useCallback, useMemo } from "react";
-import { Discriminator, IterableOr, KeyedMapper, KeyedReducer, TreeEntry, TreeStore, Updater } from "./types/helpers";
+import { Discriminator, IterableOr, KeyedMapper, KeyedReducer, Subscribable, TreeEntry, TreeStore, Updater } from "./types/helpers";
 import { TreeOps } from "./treeops";
 import { Tree } from "./tree";
 import { ITree } from "./types/itree";
 
-export const useTree = <T>(): ITree<T> => {
+export const useTree = <T>(): Subscribable<ITree<T>> => {
     const store = useRef<TreeStore<T>>({});
     // dummy state to force refresh on the component where the tree has been modified.
     const [, setState] = useState<number>(0);
+    const subscribers = useRef<Set<() => void>>(new Set<() => void>());
 
     const setStore = useCallback((cb: (prev: TreeStore<T>) => TreeStore<T>) => {
         store.current = cb(store.current);
         setState((p) => p + 1);
+        subscribers.current.forEach((cb) => cb());
+    }, []);
+
+    const subscribe = useCallback((cb: () => void) => {
+        subscribers.current.add(cb);
+        return () => {
+            subscribers.current.delete(cb);
+        };
     }, []);
 
     /* Basics */
@@ -527,6 +536,7 @@ export const useTree = <T>(): ITree<T> => {
             deepUpwardPairs,
             reduceUpwardsDeep,
             mapUpwardsDeep,
+            subscribe,
         }),
         [
             add,
@@ -613,6 +623,7 @@ export const useTree = <T>(): ITree<T> => {
             wideUpwardTuples,
             wideUpwardValues,
             wideValues,
+            subscribe,
         ]
     );
 };

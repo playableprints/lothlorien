@@ -98,3 +98,5 @@ export type TreeEntry<T> = {
 export type TreeStore<T> = {
     [key: string]: TreeEntry<T>;
 };
+
+export type Subscribable<T> = T & { subscribe: (cb: () => void) => () => void };
