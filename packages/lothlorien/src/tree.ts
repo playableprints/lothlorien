@@ -1,111 +1,14 @@
 import { Err } from "./errors";
-import { IterableOr, Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper } from "./types/helpers";
+import { IterableOr, Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper, Allocation, ReadonlyTreeEntry } from "./types/helpers";
 import { ITree } from "./types/itree";
 
 export class Tree<T> implements ITree<T> {
     protected _store: {
         [key: string]: TreeEntry<T>;
     };
-    // TODO: should I hold onto roots in a seperate array?
-    // roots: string[] = []; //hold onto roots
 
     constructor() {
         this._store = {};
-        this.has = this.has.bind(this);
-        this.contains = this.contains.bind(this);
-        this.some = this.some.bind(this);
-        this.keyOf = this.keyOf.bind(this);
-        this.findKeyOf = this.findKeyOf.bind(this);
-        this.isRoot = this.isRoot.bind(this);
-        this.isLeaf = this.isLeaf.bind(this);
-        this.get = this.get.bind(this);
-        this.depth = this.depth.bind(this);
-        this.size = this.size.bind(this);
-        this.subtreeCount = this.subtreeCount.bind(this);
-        this.add = this.add.bind(this);
-        this.addLeaf = this.addLeaf.bind(this);
-        this.addRoot = this.addRoot.bind(this);
-        this.move = this.move.bind(this);
-
-        this.update = this.update.bind(this);
-        this.updateWith = this.updateWith.bind(this);
-        this.upsert = this.upsert.bind(this);
-        this.upsertWith = this.upsertWith.bind(this);
-        this.emplace = this.emplace.bind(this);
-        this.emplaceWith = this.emplaceWith.bind(this);
-
-        this.graft = this.graft.bind(this);
-        this.sprout = this.sprout.bind(this);
-        this.truncate = this.truncate.bind(this);
-        this.pluck = this.pluck.bind(this);
-        this.prune = this.prune.bind(this);
-        this.splice = this.splice.bind(this);
-        this.trim = this.trim.bind(this);
-        this.condense = this.condense.bind(this);
-        this.clear = this.clear.bind(this);
-        this.populate = this.populate.bind(this);
-        this.detach = this.detach.bind(this);
-        this.subtrees = this.subtrees.bind(this);
-
-        this.rootKeyOf = this.rootKeyOf.bind(this);
-        this.parentKey = this.parentKey.bind(this);
-        this.parent = this.parent.bind(this);
-        this.ancestorKeys = this.ancestorKeys.bind(this);
-        this.ancestors = this.ancestors.bind(this);
-        this.childrenKeys = this.childrenKeys.bind(this);
-        this.children = this.children.bind(this);
-        this.siblingKeys = this.siblingKeys.bind(this);
-        this.siblings = this.siblings.bind(this);
-
-        this.wideDescendentKeys = this.wideDescendentKeys.bind(this);
-        this.wideDescendents = this.wideDescendents.bind(this);
-        this.deepDescendentKeys = this.deepDescendentKeys.bind(this);
-        this.deepDescendents = this.deepDescendents.bind(this);
-
-        this.rootKeys = this.rootKeys.bind(this);
-        this.rootValues = this.rootValues.bind(this);
-        this.rootTuples = this.rootTuples.bind(this);
-        this.rootCollection = this.rootCollection.bind(this);
-
-        this.leafKeys = this.leafKeys.bind(this);
-        this.leafValues = this.leafValues.bind(this);
-        this.leafTuples = this.leafTuples.bind(this);
-        this.leafCollection = this.leafCollection.bind(this);
-
-        this.wideKeys = this.wideKeys.bind(this);
-        this.wideValues = this.wideValues.bind(this);
-        this.wideTuples = this.wideTuples.bind(this);
-        this.widePairs = this.widePairs.bind(this);
-        this.reduceWide = this.reduceWide.bind(this);
-        this.mapWide = this.mapWide.bind(this);
-
-        this.deepKeys = this.deepKeys.bind(this);
-        this.deepValues = this.deepValues.bind(this);
-        this.deepTuples = this.deepTuples.bind(this);
-        this.deepPairs = this.deepPairs.bind(this);
-        this.reduceDeep = this.reduceDeep.bind(this);
-        this.mapDeep = this.mapDeep.bind(this);
-
-        this.pathKeys = this.pathKeys.bind(this);
-        this.pathValues = this.pathValues.bind(this);
-        this.pathTuples = this.pathTuples.bind(this);
-        this.pathPairs = this.pathPairs.bind(this);
-        this.reducePath = this.reducePath.bind(this);
-        this.mapPath = this.mapPath.bind(this);
-
-        this.wideUpwardKeys = this.wideUpwardKeys.bind(this);
-        this.wideUpwardValues = this.wideUpwardValues.bind(this);
-        this.wideUpwardTuples = this.wideUpwardTuples.bind(this);
-        this.wideUpwardPairs = this.wideUpwardPairs.bind(this);
-        this.reduceUpwardsWide = this.reduceUpwardsWide.bind(this);
-        this.mapUpwardsWide = this.mapUpwardsWide.bind(this);
-
-        this.deepUpwardKeys = this.deepUpwardKeys.bind(this);
-        this.deepUpwardValues = this.deepUpwardValues.bind(this);
-        this.deepUpwardTuples = this.deepUpwardTuples.bind(this);
-        this.deepUpwardPairs = this.deepUpwardPairs.bind(this);
-        this.reduceUpwardsDeep = this.reduceUpwardsDeep.bind(this);
-        this.mapUpwardsDeep = this.mapUpwardsDeep.bind(this);
     }
 
     /* Basics */
@@ -146,6 +49,10 @@ export class Tree<T> implements ITree<T> {
         return this._store[key]?.value;
     }
 
+    entry(key: string): ReadonlyTreeEntry<T> | undefined {
+        return this._store[key];
+    }
+
     depth(key: string): number {
         return this.ancestorKeys(key).length;
     }
@@ -178,7 +85,7 @@ export class Tree<T> implements ITree<T> {
                 };
                 this._store[parent].children.push(key);
             } else {
-                throw `invalid parent '${parent}' when inserting key '${key}'`;
+                throw Err.INVALID_PARENT(parent);
             }
         }
     }
@@ -274,7 +181,7 @@ export class Tree<T> implements ITree<T> {
             const r = sapling.get(saplingRoot);
             this.add(saplingRoot, graftPoint, r!);
             sapling.childrenKeys(saplingRoot).forEach((cid) => {
-                this.graft(sapling, cid, saplingRoot);
+                this.graft.call(this, sapling, cid, saplingRoot);
             });
         }
     }
@@ -307,7 +214,9 @@ export class Tree<T> implements ITree<T> {
                 { [key]: this._store[key].value }
             );
             const n = this._store[key];
-            n.children.forEach(this.truncate);
+            n.children.forEach((cid) => {
+                this.truncate.call(this, cid);
+            });
             if (n.parent !== null) {
                 this._store[n.parent].children = this._store[n.parent].children.filter((cid) => cid !== key);
             }
@@ -364,18 +273,23 @@ export class Tree<T> implements ITree<T> {
         }
     }
 
-    condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => TreeEntry<T> | false): void {
+    condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => void | { key: string; value: T }): void {
         const doMerge = (aKey: string) => {
             const a = this._store[aKey];
             if (a.children.length === 1) {
                 const bKey = a.children[0];
                 const b = this._store[bKey];
                 const r = merger(a, b);
-                if (r !== false) {
+                if (r) {
                     // If 'merger' returns a new node, replace a and b with the new node in 'hold'
                     delete this._store[aKey];
                     delete this._store[bKey];
-                    this._store[r.key] = r;
+                    this._store[r.key] = {
+                        key: r.key,
+                        value: r.value,
+                        parent: a.parent,
+                        children: b.children,
+                    };
 
                     // Update parent-child relationship for the merged node
                     if (a.parent && this._store[a.parent]) {
@@ -424,9 +338,9 @@ export class Tree<T> implements ITree<T> {
         this._store = {};
     }
 
-    populate<F>(list: Iterable<F>, allocator: (data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void) {
+    populate<F>(list: Iterable<F>, allocator: (data: F) => IterableOr<Allocation<T>> | void) {
         const hold: {
-            [key: string]: { key: string; value: T; parent: string | null };
+            [key: string]: Allocation<T>;
         } = {};
 
         // Convert the input data entries into nodes and store them in the 'hold' object
@@ -441,11 +355,7 @@ export class Tree<T> implements ITree<T> {
 
         const doAllocation = (k: string) => {
             if (!hold[k]) {
-                console.error(
-                    `Parent node "${k}" not found.
-Make sure to add all parent nodes. Check the order of the input list.`
-                );
-                throw Err.INCOMPLETE;
+                throw Err.UNALLOCATED(k);
             }
 
             if (!this.has(k)) {

@@ -1,4 +1,4 @@
-import { Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper, IterableOr } from "./helpers";
+import { Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper, IterableOr, ReadonlyTreeEntry } from "./helpers";
 
 export interface ITree<T> {
     /* Basics */
@@ -59,6 +59,13 @@ export interface ITree<T> {
      * @returns {T} The value associated with the node.
      */
     get(key: string): T | undefined;
+
+    /**
+     * Gives access to the Tree Entry directly for reference reasons; Warning: cannot be modified, lest something get messed up with three internal state.
+     * @param {string} key The key of the node to get the entry of.
+     * @returns {Readonly TreeEntr<T> | undefined} the tree entry
+     */
+    entry(key: string): ReadonlyTreeEntry<T> | undefined;
 
     /**
      * Calculates the depth of the node with the given key in the tree.
@@ -235,9 +242,9 @@ export interface ITree<T> {
      * The merger function takes two adjacent nodes 'a' and 'b', and if applicable, returns a new merged node 'r'.
      * If the merger function returns false, no merge is performed between 'a' and 'b'.
      *
-     * @param {(a: TreeEntry<T>, b: TreeEntry<T>) => TreeEntry<T> | false} merger - The function to merge adjacent nodes with single children.
+     * @param {(a: TreeEntry<T>, b: TreeEntry<T>) => void | { key: string, value: T }} merger - The function to merge adjacent nodes with single children.
      */
-    condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => TreeEntry<T> | false): void;
+    condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => void | { key: string; value: T }): void;
 
     /**
      * Detaches a part of a tree at the given key, and makes that node the root of a new subtree within this tree.
@@ -258,9 +265,9 @@ export interface ITree<T> {
 
     /**
      * Given a list of nodes, allocate them into the forest.
-     * 
-     * @param {Iterable<F>} list 
-     * @param {(data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void} allocator 
+     *
+     * @param {Iterable<F>} list
+     * @param {(data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void} allocator
      */
     populate<F>(list: Iterable<F>, allocator: (data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void): void;
 

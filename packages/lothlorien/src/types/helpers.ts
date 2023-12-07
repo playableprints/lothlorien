@@ -94,3 +94,12 @@ export type TreeEntry<T> = {
     children: string[];
     value: T;
 };
+
+export type ReadonlyTreeEntry<T> = {
+    readonly key: string;
+    readonly parent: string | null;
+    readonly children: readonly string[];
+    readonly value: T;
+};
+
+export type Allocation<T> = { key: string; value: T; parent: string | null };
