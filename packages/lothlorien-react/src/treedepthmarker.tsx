@@ -1,9 +1,8 @@
 import { ITree } from "@playableprints/lothlorien";
-import { memo, ReactNode, HTMLAttributes, useContext, MutableRefObject, useMemo } from "react";
+import { memo, ReactNode, HTMLAttributes, useMemo, Fragment } from "react";
 import { useSnapshot } from "valtio";
-import { TreeCTX } from "./treeview";
 
-// defaults are ascii art, becuase 8-bit :3
+// defaults are ascii art, becuase it's wonderful :3
 const DEFAULT_PIPE = <span className={"pipe"}>{"│"}</span>;
 const DEFAULT_TEE = <span className={"tee"}>{"├"}</span>;
 const DEFAULT_ELBOW = <span className={"elbow"}>{"╰"}</span>;
@@ -11,35 +10,35 @@ const DEFAULT_SPACER = <span className={"spacer"}> </span>;
 
 export const TreeDepthMarker = memo(
     ({
+        treeRef,
         nodeKey,
+        rtf = false,
         spacer = DEFAULT_SPACER,
         pipe = DEFAULT_PIPE,
         elbow = DEFAULT_ELBOW,
         tee = DEFAULT_TEE,
+        children,
         ...rest
-    }: { nodeKey: string; spacer?: ReactNode; pipe?: ReactNode; elbow?: ReactNode; tee?: ReactNode } & HTMLAttributes<HTMLSpanElement>): ReactNode => {
-        const proxy = useContext(TreeCTX) as MutableRefObject<ITree<unknown>>;
-        if (proxy === null) {
-            throw `<TreeDepthMarker> must be a child of a TreeView component`;
-        }
-        const snapshot = useSnapshot(proxy.current);
+    }: { treeRef: ITree<unknown>; nodeKey: string; spacer?: ReactNode; pipe?: ReactNode; elbow?: ReactNode; tee?: ReactNode; rtf?: boolean } & HTMLAttributes<HTMLSpanElement>): ReactNode => {
+        const snapshot = useSnapshot(treeRef);
 
         const isLastList = useMemo(() => {
-            const aKeys = snapshot.ancestorKeys(nodeKey).reverse();
-            return [...aKeys, nodeKey].map((aKey, i, arr) => {
+            const theKeys = rtf ? [nodeKey, ...snapshot.ancestorKeys(nodeKey)] : [...snapshot.ancestorKeys(nodeKey).reverse(), nodeKey];
+            return theKeys.map((aKey, i, arr) => {
                 const pKey = snapshot.parentKey(aKey);
                 const siblings = pKey ? snapshot.childrenKeys(pKey) : snapshot.rootKeys();
-                const sIdx = siblings.indexOf(aKey);
-                const isLastOfSiblings = sIdx === siblings.length - 1;
-
-                if (i === arr.length - 1) {
-                    //last iteration
-                    return isLastOfSiblings ? elbow : tee;
-                }
-                return isLastOfSiblings ? spacer : pipe;
+                const isLastOfSiblings = siblings.indexOf(aKey) === siblings.length - 1;
+                const isFinal = rtf ? i === 0 : i === arr.length - 1;
+                return <Fragment key={i}>{isFinal ? (isLastOfSiblings ? elbow : tee) : isLastOfSiblings ? spacer : pipe}</Fragment>;
             });
-        }, [snapshot, nodeKey, elbow, tee, spacer, pipe]);
+        }, [snapshot, nodeKey, elbow, tee, spacer, pipe, rtf]);
 
-        return <span {...rest}>{isLastList}</span>;
+        return (
+            <span {...rest}>
+                {rtf ? children : null}
+                {isLastList}
+                {!rtf ? children : null}
+            </span>
+        );
     }
 );
