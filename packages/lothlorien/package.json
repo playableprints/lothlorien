@@ -1,6 +1,6 @@
 {
     "name": "@playableprints/lothlorien",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "description": "",
     "type": "module",
     "main": "dist/index.js",
@@ -22,7 +22,6 @@
         "@types/jest": "^29.5.10",
         "@types/node": "^20.10.3",
         "jest": "^29.7.0",
-        "path": "^0.12.7",
         "ts-jest": "^29.1.1",
         "tsup": "^8.0.1",
         "typescript": "^5.3.2"

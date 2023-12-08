@@ -1,0 +1,44 @@
+name: Publish
+on:
+    release:
+        types: [created]
+
+jobs:
+    publish-gpr:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - name: Setup Repo
+              uses: actions/checkout@v3
+            - name: Setup PNPM
+              uses: pnpm/action-setup@v2
+              with:
+                  version: 8
+            - name: Setup Node
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 16
+                  registry-url: "https://registry.npmjs.org"
+                  cache: "pnpm"
+            - name: Install Deps Lothlorien
+              run: pnpm --filter @playableprints/lothlorien install --frozen-lockfile
+              env:
+                  NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+            - name: Build Lothlorien
+              run: pnpm --filter @playableprints/lothlorien run build
+            - name: Publish
+              run: pnpm --filter @playableprints/lothlorien publish --no-git-checks
+              env:
+                  NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+            - name: Install Deps Lothlorien-React
+              run: pnpm --filter @playableprints/lothlorien-react install --frozen-lockfile
+              env:
+                  NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+            - name: Build Lothlorien
+              run: pnpm --filter @playableprints/lothlorien-react run build
+            - name: Publish
+              run: pnpm --filter @playableprints/lothlorien-react publish --no-git-checks
+              env:
+                  NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
