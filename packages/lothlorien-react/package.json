@@ -21,7 +21,7 @@
     "license": "ISC",
     "dependencies": {
         "valtio": "^1.12.1",
-        "@playableprints/lothlorien": "^0.1.0"
+        "@playableprints/lothlorien": "^0.1.1"
     },
     "peerDependencies": {
         "react": "^18.2.0"
