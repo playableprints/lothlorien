@@ -29,16 +29,16 @@ jobs:
             - name: Build Lothlorien
               run: pnpm --filter @playableprints/lothlorien run build
             - name: Publish
-              run: pnpm --filter @playableprints/lothlorien publish --no-git-checks --access public
+              run: pnpm --filter @playableprints/lothlorien publish --no-git-checks
               env:
                   NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
             - name: Install Deps Lothlorien-React
               run: pnpm --filter @playableprints/lothlorien-react install --frozen-lockfile
               env:
                   NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-            - name: Build Lothlorien
+            - name: Build Lothlorien-React
               run: pnpm --filter @playableprints/lothlorien-react run build
-            - name: Publish
-              run: pnpm --filter @playableprints/lothlorien-react publish --no-git-checks --access public
+            - name: Publish Lothlorien-React
+              run: pnpm --filter @playableprints/lothlorien-react publish --no-git-checks
               env:
                   NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
