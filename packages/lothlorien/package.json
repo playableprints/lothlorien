@@ -2,6 +2,7 @@
     "name": "@playableprints/lothlorien",
     "version": "0.1.0",
     "description": "",
+    "private": false,
     "type": "module",
     "main": "dist/index.js",
     "module": "dist/index.mjs",
