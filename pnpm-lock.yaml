@@ -30,7 +30,7 @@ importers:
   packages/lothlorien-react:
     dependencies:
       '@playableprints/lothlorien':
-        specifier: ^0.1.0
+        specifier: ^0.1.1
         version: link:../lothlorien
       valtio:
         specifier: ^1.12.1
