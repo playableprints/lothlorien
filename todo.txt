@@ -1,3 +1,0 @@
-[ ] map-functions
-[ ] change name of walk to reduce? (ie: walkWide -> reduceWide);
-[ ] sorted tree subclass
