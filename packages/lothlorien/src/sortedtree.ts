@@ -18,26 +18,6 @@ export class SortedTree<T> extends Tree<T> implements ISortedTree<T> {
         super();
         this._keys = [];
         this._comparator = defaultComparator ?? DEFAULT_COMPARATOR;
-
-        this.next = this.next.bind(this);
-        this.nextWith = this.nextWith.bind(this);
-        this.nextKey = this.nextKey.bind(this);
-        this.nextKeyWith = this.nextKeyWith.bind(this);
-        this.prev = this.prev.bind(this);
-        this.prevWith = this.prevWith.bind(this);
-        this.prevKey = this.prevKey.bind(this);
-        this.prevKeyWith = this.prevKeyWith.bind(this);
-        this.keyAt = this.keyAt.bind(this);
-        this.valueAt = this.valueAt.bind(this);
-        this.setComparator = this.setComparator.bind(this);
-        this.sort = this.sort.bind(this);
-        this.indexOf = this.indexOf.bind(this);
-        this.findIndexOf = this.findIndexOf.bind(this);
-
-        this.siblingIndexOf = this.siblingIndexOf.bind(this);
-        this.findSiblingIndexOf = this.findSiblingIndexOf.bind(this);
-
-        this.flatPathKeys = this.flatPathKeys.bind(this);
     }
 
     siblingIndexOf(key: string): number {
@@ -305,7 +285,7 @@ export class SortedTree<T> extends Tree<T> implements ISortedTree<T> {
         return res;
     }
 
-    override condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => false | TreeEntry<T>): void {
+    override condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => void | { key: string; value: T }): void {
         super.condense(merger);
         this.sort();
     }
