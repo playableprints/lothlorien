@@ -1,0 +1,15 @@
+{
+    "name": "lothlorien-examples",
+    "version": "0.1.1",
+    "description": "",
+    "private": false,
+    "type": "module",
+    "scripts": {},
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@playableprints/lothlorien": "^0.1.1",
+        "@playableprints/lothlorien-react": "^0.1.1"
+    }
+}
