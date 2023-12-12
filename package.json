@@ -4,10 +4,10 @@
         "packages/*"
     ],
     "scripts": {
-        "docs": "typedoc"
+        "docs": "pnpm -r predoc && typedoc"
     },
     "devDependencies": {
-        "typedoc": "^0.25.2",
+        "typedoc": "^0.25.4",
         "typescript": "^5.0.4"
     }
 }

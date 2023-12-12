@@ -15,7 +15,7 @@
         "clean": "rm -rf dist",
         "test": "jest",
         "coverage": "jest --coverage",
-        "docs": "typedoc ./src"
+        "predoc": "tsc --declaration --emitDeclarationOnly --declarationMap --outDir dist"
     },
     "keywords": [],
     "author": "",

@@ -26,10 +26,6 @@ jobs:
               run: pnpm install --no-lockfile
               env:
                   NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-            - name: Build Lothlorien
-              run: pnpm --filter @playableprints/lothlorien run build
-            - name: Build Lothlorien-React
-              run: pnpm --filter @playableprints/lothlorien-react run build
             - name: Build Docs
               run: pnpm run docs
             - name: Deploy
