@@ -26,6 +26,8 @@ jobs:
               run: pnpm install --no-lockfile
               env:
                   NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+            - name: Remove GitIgnore
+              run: rm ./.gitignore
             - name: Build Docs
               run: pnpm run docs
             - name: Deploy
