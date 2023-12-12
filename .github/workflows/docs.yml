@@ -27,7 +27,9 @@ jobs:
               env:
                   NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
             - name: Build Docs
-              run: pnpm run docs
+              run: |
+                  rm ./.gitignore
+                  pnpm run docs
             - name: Deploy
               uses: JamesIves/github-pages-deploy-action@v4.4.1
               with:
