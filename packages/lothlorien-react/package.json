@@ -1,6 +1,6 @@
 {
     "name": "@playableprints/lothlorien-react",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "",
     "private": false,
     "type": "module",
@@ -21,7 +21,7 @@
     "license": "ISC",
     "dependencies": {
         "valtio": "^1.12.1",
-        "@playableprints/lothlorien": "^0.1.1"
+        "@playableprints/lothlorien": "^0.1.2"
     },
     "peerDependencies": {
         "react": "^18.2.0"

@@ -4,7 +4,7 @@ on:
         types: [created]
 
 jobs:
-    publish-gpr:
+    publish:
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -22,8 +22,8 @@ jobs:
                   node-version: 16
                   registry-url: "https://registry.npmjs.org"
                   cache: "pnpm"
-            - name: Install Deps Lothlorien
-              run: pnpm --filter @playableprints/lothlorien install --frozen-lockfile
+            - name: Install All Deps
+              run: pnpm install --no-lockfile
               env:
                   NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
             - name: Build Lothlorien
@@ -32,10 +32,6 @@ jobs:
               run: pnpm --filter @playableprints/lothlorien publish --no-git-checks
               env:
                   NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-            - name: Install Deps Lothlorien-React
-              run: pnpm --filter @playableprints/lothlorien-react install --frozen-lockfile
-              env:
-                  NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
             - name: Build Lothlorien-React
               run: pnpm --filter @playableprints/lothlorien-react run build
             - name: Publish Lothlorien-React

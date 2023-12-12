@@ -1,0 +1,9 @@
+{
+    "entryPoints": ["packages/*"],
+    "name": "Lothlorien",
+    "entryPointStrategy": "packages",
+    "includeVersion": false
+
+    // Potentially useful for debugging
+    // "logLevel": "Verbose"
+}
