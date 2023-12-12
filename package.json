@@ -6,7 +6,7 @@
     "scripts": {
         "docs": "typedoc"
     },
-    "dependencies": {
+    "devDependencies": {
         "typedoc": "^0.25.2",
         "typescript": "^5.0.4"
     }
