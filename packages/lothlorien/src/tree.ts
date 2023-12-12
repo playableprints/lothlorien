@@ -354,17 +354,19 @@ export class Tree<T> implements ITree<T> {
         }
 
         const doAllocation = (k: string) => {
+            if (this.has(k)) {
+                // already in tree
+                return;
+            }
             if (!hold[k]) {
+                // missing from allocation
                 throw Err.UNALLOCATED(k);
             }
-
-            if (!this.has(k)) {
-                const { parent, value } = hold[k];
-                if (parent !== null && !this.has(parent)) {
-                    doAllocation(parent);
-                }
-                this.add(k, parent, value);
+            const { parent, value } = hold[k];
+            if (parent !== null && !this.has(parent)) {
+                doAllocation(parent);
             }
+            this.add(k, parent, value);
         };
 
         Object.keys(hold).forEach(doAllocation);
