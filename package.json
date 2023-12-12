@@ -4,7 +4,8 @@
         "packages/*"
     ],
     "scripts": {
-        "docs": "pnpm -r predoc && typedoc"
+        "docs": "pnpm -r predoc && typedoc",
+        "dev": "pnpm -r clean && pnpm run docs && pnpm -r clean && pnpm -r build"
     },
     "devDependencies": {
         "typedoc": "^0.25.4",
