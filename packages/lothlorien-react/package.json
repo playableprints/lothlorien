@@ -19,7 +19,12 @@
     },
     "keywords": [],
     "author": "",
-    "license": "ISC",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/playableprints/lothlorien"
+    },
+    "homepage": "https://playableprints.github.io/lothlorien/index.html",
     "dependencies": {
         "valtio": "^1.12.1",
         "@playableprints/lothlorien": "^0.1.2"

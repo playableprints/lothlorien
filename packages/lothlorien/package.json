@@ -17,9 +17,14 @@
         "coverage": "jest --coverage",
         "predoc": "tsc --declaration --emitDeclarationOnly --declarationMap --outDir dist"
     },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/playableprints/lothlorien"
+    },
+    "homepage": "https://playableprints.github.io/lothlorien/index.html",
     "keywords": [],
     "author": "",
-    "license": "ISC",
+    "license": "MIT",
     "devDependencies": {
         "@types/jest": "^29.5.10",
         "@types/node": "^20.10.3",
