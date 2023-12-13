@@ -56,11 +56,11 @@ export interface TreeFoldControls {
     /**
      * re-syncs the internal state to coincide with the existing keys on a tree.
      * initializes new keys in internal state, removed unused keys from internal state.
-     * @param {T} tree - the tree used to update the internal state with
+     * @param {T} tree - the tree used to sync the internal state with
      * @param prefix
      * @returns
      */
-    update: <T extends Tree<any>>(tree: T, prefix?: string) => void;
+    sync: <T extends Tree<any>>(tree: T, prefix?: string) => void;
     /**
      * clears the fold state.
      * @param {string} [prefix] - used to differentiate between multiple tree states, if relevant
@@ -116,7 +116,7 @@ export const TreeFold = forwardRef(({ children, startClosed = false }: TreeFoldP
     const state = useRef<{ [key: string]: { [key: string]: boolean } }>({});
     const listeners = useRef<Set<() => void>>(new Set<() => void>());
 
-    const update = useCallback(<T extends Tree<any>>(tree: T, prefix: string = "") => {
+    const sync = useCallback(<T extends Tree<any>>(tree: T, prefix: string = "") => {
         state.current = {
             ...state.current,
             [prefix]: tree.wideKeys().reduce<{ [key: string]: boolean }>((acc, k) => {
@@ -190,13 +190,13 @@ export const TreeFold = forwardRef(({ children, startClosed = false }: TreeFoldP
             return {
                 set,
                 toggle,
-                update,
+                sync,
                 clear,
                 load,
                 save,
             };
         },
-        [set, toggle, update, clear, load, save]
+        [set, toggle, sync, clear, load, save]
     );
 
     return <TreeToggleCTX.Provider value={value}>{children}</TreeToggleCTX.Provider>;

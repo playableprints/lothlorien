@@ -154,7 +154,7 @@ const App = () => {
 ## Imperative Handle and Folder State Hygene
 
 the `<TreeFold>` does come with an imperative handle hook, which will let you both keep current fold state, but keep the internal state clean when the shape of a tree changes.
-calling `foldControls.current.update` in this way will keep any existing fold state as is, initialize any new keys, and discard any that is no longer present as a result of the tree being repopulated.
+calling `foldControls.current.sync` in this way will keep any existing fold state as is, initialize any new keys, and discard any that is no longer present as a result of the tree being repopulated.
 
 ```ts
 const App = () => {
@@ -169,7 +169,7 @@ const App = () => {
 
         // update fold controls will keep current fold state for keys that still exist, initialize new keys, and remove any now-unused keys.
         // the prefix let's you target a specific fold-state collection, but is optional if you're only handling one tree's state.
-        foldControls.current?.update(tree.current, "myPrefix");
+        foldControls.current?.sync(tree.current, "myPrefix");
     }, [source, foldControls, tree]);
 
     return (
