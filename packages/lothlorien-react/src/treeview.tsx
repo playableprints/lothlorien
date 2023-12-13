@@ -9,7 +9,12 @@ const genericMemo: <T>(component: T) => T = memo;
 type PayloadOf<T> = T extends Tree<infer P> ? P : never;
 
 /**
- *
+ * @prop nodeKey - the key of the node being rendered
+ * @prop value - the value of this node of the tree
+ * @prop treeRef - a reference to the tree object
+ * @prop childNodes - include this in the return statement to render this node's children.
+ * @interface
+ * @group Component Props
  */
 export type TreeNodeComponentProps<T extends Tree<any>> = {
     nodeKey: string;
@@ -18,6 +23,29 @@ export type TreeNodeComponentProps<T extends Tree<any>> = {
     childNodes: ReactNode;
 };
 
+/**
+ * A component helper type to define what a TreeView takes as a node renderer
+ *
+ * @example
+ * ```ts
+ *  type MyPayload = {
+ *      name: string
+ *  };
+ *
+ * const MyNodeRenderer: TreeNodeComponent<SortedTree<MyPayload>> = ({ nodeKey, value, treeRef, childNodes }) => {
+ *     return (<>
+ *          <div>{value.name}</div>
+ *          {childNodes}
+ *      </>)
+ * }
+ *
+ * const App = () => {
+ *      const myTree = useSortedTree<MyPayload>();
+ *      return <TreeView value={myTree} renderer={MyNodeRenderer} />
+ * }
+ * ```
+ *
+ */
 export type TreeNodeComponent<T extends Tree<any>> = (props: TreeNodeComponentProps<T>) => JSX.Element;
 
 /**
@@ -35,11 +63,37 @@ export const useTree = <P,>() => useRef<Tree<P>>(proxy(new Tree<P>()));
 export const useSortedTree = <P,>(sorter?: Comparator<[string, P]>) => useRef<SortedTree<P>>(proxy(new SortedTree<P>(sorter)));
 
 /**
- * Renders a given tree with each node being rendered by the included renderer component prop
- * @group Components
+ * @prop value - a RefObject of the tree that will be rendered.
+ * @prop renderer - the component that will be used to render the tree's nodes.
+ * @interface
+ * @group Component Props
  */
 
-export const TreeView = <T extends Tree<any>>(props: { value: MutableRefObject<T>; renderer: TreeNodeComponent<T> }) => {
+export type TreeViewProps<T extends Tree<any>> = { value: MutableRefObject<T>; renderer: TreeNodeComponent<T> };
+
+/**
+ * Renders a given tree with each node being rendered by the included renderer component prop.
+ *
+ * @group Components
+ *
+ * @example
+ * ```ts
+ *  type MyPayload = {
+ *      name: string
+ *  };
+ *
+ * const MyNodeRenderer = (props: TreeNodeComponentProps<Tree<MyPayload>>) => {
+ *     return <div>{props.value.name}</div>
+ * }
+ *
+ * const App = () => {
+ *      const myTree = useTree<MyPayload>();
+ *      return <TreeView value={myTree} renderer={MyNodeRenderer} />
+ * }
+ * ```
+ *
+ */
+export const TreeView = <T extends Tree<any>>(props: TreeViewProps<T>) => {
     const { value, renderer } = props;
     const snapshot = useSnapshot(value.current);
     return snapshot.rootKeys().map((key) => {

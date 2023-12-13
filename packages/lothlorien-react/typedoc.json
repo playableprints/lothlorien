@@ -2,5 +2,5 @@
     "$schema": "https://typedoc.org/schema.json",
     "includeVersion": true,
     "entryPoints": ["src/index.ts"],
-    "groupOrder": ["Components", "Hooks", "*"]
+    "groupOrder": ["Components", "Type Aliases", "Component Props", "Hooks", "*"]
 }

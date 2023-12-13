@@ -2,8 +2,9 @@
     "entryPoints": ["packages/*"],
     "name": "Lothlorien",
     "entryPointStrategy": "packages",
-    "includeVersion": false
-
+    "includeVersion": false,
+    "hideGenerator": true
+    // "plugin": ["typedoc-plugin-merge-modules"]
     // Potentially useful for debugging
     // "logLevel": "Verbose"
 }

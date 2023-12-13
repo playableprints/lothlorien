@@ -467,41 +467,41 @@ export class Tree<T> {
     }
 
     /**
-     * Condenses the tree by merging nodes with single children using the provided merger function.
-     * The merger function takes two adjacent nodes 'a' and 'b', and if applicable, returns a new merged node 'r'.
-     * If the merger function returns false, no merge is performed between 'a' and 'b'.
-     * @param {(a: TreeEntry<T>, b: TreeEntry<T>) => void | { key: string, value: T }} merger - The function to merge adjacent nodes with single children.
+     * Condenses the tree by merging nodes with one child with that one child using the provided merger function.
+     * The merger function takes two adjacent nodes 'parent' and 'child', and if applicable, returns a new merged node 'r'.
+     * If the merger function returns void, no merge is performed between 'parent' and 'child'.
+     * @param {(parent: TreeEntry<T>, child: TreeEntry<T>) => void | { key: string, value: T }} merger - The function to merge adjacent nodes with single children.
      * @group Modify
      */
-    condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => void | { key: string; value: T }): void {
-        const doMerge = (aKey: string) => {
-            const a = this._store[aKey];
-            if (a.children.length === 1) {
-                const bKey = a.children[0];
-                const b = this._store[bKey];
-                const r = merger(a, b);
+    condense(merger: (parent: TreeEntry<T>, child: TreeEntry<T>) => void | { key: string; value: T }): void {
+        const doMerge = (pKey: string) => {
+            const pNode = this._store[pKey];
+            if (pNode.children.length === 1) {
+                const cKey = pNode.children[0];
+                const cNode = this._store[cKey];
+                const r = merger(pNode, cNode);
                 if (r) {
                     // If 'merger' returns a new node, replace a and b with the new node in 'hold'
-                    delete this._store[aKey];
-                    delete this._store[bKey];
+                    delete this._store[pKey];
+                    delete this._store[cKey];
                     this._store[r.key] = {
                         key: r.key,
                         value: r.value,
-                        parent: a.parent,
-                        children: b.children,
+                        parent: pNode.parent,
+                        children: cNode.children,
                     };
 
                     // Update parent-child relationship for the merged node
-                    if (a.parent && this._store[a.parent]) {
-                        this._store[a.parent].children = [...this._store[a.parent].children.filter((t) => t !== aKey), r.key];
+                    if (pNode.parent && this._store[pNode.parent]) {
+                        this._store[pNode.parent].children = [...this._store[pNode.parent].children.filter((t) => t !== pKey), r.key];
                     }
                     doMerge(r.key);
                 } else {
-                    doMerge(bKey); // Continue merging recursively for b's children
+                    doMerge(cKey); // Continue merging recursively for b's children
                 }
             } else {
                 // If a has more than one child, recursively merge children
-                a.children.forEach(doMerge);
+                pNode.children.forEach(doMerge);
             }
         };
         // to de determined: should this be on rootKeys or rootKeys.children...
@@ -510,7 +510,7 @@ export class Tree<T> {
 
     /**
      * Detaches a part of a tree at the given key, and makes that node the root of a new subtree within this tree.
-     * @param {string | null} key The key of the node to be spliced.
+     * @param {string | null} key The key of the node to be detatched - the new root of it's own subtree.
      * @group Modify
      */
     detach(key: string | null): void {
@@ -554,7 +554,6 @@ export class Tree<T> {
 
     /**
      * Given a list of nodes, allocate them into the forest.
-     *
      * @param {Iterable<F>} list
      * @param {(data: F) => IterableOr<{ key: string; value: T; parent: string | null }> | void} allocator
      * @group Modify
