@@ -34,7 +34,7 @@ When you want to have nodes be collapsable or foldable, you can make use of your
 
 ## Basic Use
 
-Wrap the `<TreeView>` in a `<TreeFolder>` and the node renderer can access it via the `useTreeFolder` hook.
+Wrap the `<TreeView>` in a `<TreeFold>` and the node renderer can access it via the `useTreeFold` hook.
 
 ```ts
 type Payload = {
@@ -42,7 +42,7 @@ type Payload = {
 };
 
 const MyNodeRenderer: TreeNodeComponent<Tree<Payload>> = (props) => {
-    const { isOpen, toggle } = useTreeFolder(props.nodeKey);
+    const { isOpen, toggle } = useTreeFold(props.nodeKey);
     return (
         <>
             <div>
@@ -58,16 +58,16 @@ const App = () => {
     const tree = useTree<Payload>();
 
     return (
-        <TreeFolder>
+        <TreeFold>
             <TreeView value={tree} renderer={MyNodeRenderer} />
-        </TreeFolder>
+        </TreeFold>
     );
 };
 ```
 
 ## More Global-er State
 
-the `<TreeFolder>` does not need to be the immediate ancestor of `<TreeView>`. In situations where you wish to preserve a tree's state between switching of contexts, a `<TreeFolder>` can exist anywhere in the `<TreeView>`'s ancestry (As with any other react context, it will use the closest one if there are multiple in it's ancestry)
+the `<TreeFold>` does not need to be the immediate ancestor of `<TreeView>`. In situations where you wish to preserve a tree's state between switching of contexts, a `<TreeFold>` can exist anywhere in the `<TreeView>`'s ancestry (As with any other react context, it will use the closest one if there are multiple in it's ancestry)
 
 ```ts
 
@@ -76,7 +76,7 @@ type Payload = {
 };
 
 const MyNodeRenderer: TreeNodeComponent<Tree<Payload>> = (props) => {
-    const { isOpen, toggle } = useTreeFolder(props.nodeKey);
+    const { isOpen, toggle } = useTreeFold(props.nodeKey);
     return (
         <>
             <div>
@@ -93,7 +93,7 @@ const App = () => {
     const tree = useTree<Payload>();
 
     return (
-        <TreeFolder>
+        <TreeFold>
             <Router>
                 <Route>
                     <TreeView value={tree} renderer={MyNodeRenderer} />
@@ -101,20 +101,20 @@ const App = () => {
                 <Route>
                     {...}
                 </Route>
-        </TreeFolder>
+        </TreeFold>
     );
 };
 ```
 
 ## Prefixing
 
-It is possible to store multiple tree fold-states in one TreeFolder by utilizing a `prefix`. This is useful when using TreeFold in a more global way.
+It is possible to store multiple tree fold-states in one TreeFold by utilizing a `prefix`. This is useful when using TreeFold in a more global way.
 
 in the below example, by using the prefixes `first` and `second` the state of the two trees won't collide.
 
 ```ts
 const MyNodeRenderer: TreeNodeComponent<Tree<Payload>> = (props) => {
-    const { isOpen, toggle } = useTreeFolder(props.nodeKey, "first");
+    const { isOpen, toggle } = useTreeFold(props.nodeKey, "first");
     return (
         <>
             <div>
@@ -127,7 +127,7 @@ const MyNodeRenderer: TreeNodeComponent<Tree<Payload>> = (props) => {
 };
 
 const MyOtherNode: TreeNodeComponent<Tree<Payload>> = (props) => {
-    const { isOpen, toggle } = useTreeFolder(props.nodeKey, "second");
+    const { isOpen, toggle } = useTreeFold(props.nodeKey, "second");
     return (
         <>
             <div>
@@ -143,17 +143,17 @@ const App = () => {
     const firstTree = useTree<Payload>();
     const secondTree = useTree<Payload>();
     return (
-        <TreeFolder>
+        <TreeFold>
             <TreeView value={firstTree} renderer={FirstNodeRenderer} />
             <TreeView value={secondTree} renderer={SecondNodeRenderer} />
-        </TreeFolder>
+        </TreeFold>
     );
 };
 ```
 
 ## Imperative Handle and Folder State Hygene
 
-the `<TreeFolder>` does come with an imperative handle hook, which will let you both keep current fold state, but keep the internal state clean when the shape of a tree changes.
+the `<TreeFold>` does come with an imperative handle hook, which will let you both keep current fold state, but keep the internal state clean when the shape of a tree changes.
 calling `foldControls.current.update` in this way will keep any existing fold state as is, initialize any new keys, and discard any that is no longer present as a result of the tree being repopulated.
 
 ```ts
@@ -173,9 +173,9 @@ const App = () => {
     }, [source, foldControls, tree]);
 
     return (
-        <TreeFolder ref={foldControls}>
+        <TreeFold ref={foldControls}>
             <TreeView value={tree} renderer={MyNodeRenderer} />
-        </TreeFolder>
+        </TreeFold>
     );
 };
 ```

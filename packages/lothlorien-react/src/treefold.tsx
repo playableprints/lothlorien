@@ -13,7 +13,7 @@ type TreeFoldStore = {
 const TreeToggleCTX = createContext<TreeFoldStore | null>(null);
 
 /**
- * Imperative Handle for TreeFolder
+ * Imperative Handle for TreeFold
  * used to manipulate the fold-state from without the TreeFold container.
  *
  * @example
@@ -27,9 +27,9 @@ const TreeToggleCTX = createContext<TreeFoldStore | null>(null);
  *          myControls.current?.set("someKey", true);
  *      }, [])
  *
- *      return <TreeFolder ref={myControls}>
+ *      return <TreeFold ref={myControls}>
  *          <TreeView value={myTree} renderer={MyNodeRenderer} />
- *      </TreeFolder>
+ *      </TreeFold>
  * }
  * ```
  *
@@ -102,9 +102,9 @@ export type TreeFoldProps = {
  * const App = () => {
  *      const tree = useTree<Payload>();
  *      return (
- *          <TreeFolder>
+ *          <TreeFold>
  *              <TreeView value={tree} renderer={MyNodeRenderer} />
- *          </TreeFolder>
+ *          </TreeFold>
  *      );
  * };
  * ```
@@ -205,7 +205,7 @@ export const TreeFold = forwardRef(({ children, startClosed = false }: TreeFoldP
  * @example
  * ```ts
  * const MyNodeRenderer: TreeNodeComponent<Tree<Payload>> = (props) => {
- *      const { isOpen, toggle } = useTreeFolder(props.nodeKey);
+ *      const { isOpen, toggle } = useTreeFold(props.nodeKey);
  *      return (
  *          <>
  *              <div>
