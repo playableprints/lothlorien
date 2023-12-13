@@ -40,19 +40,19 @@ const TreeToggleCTX = createContext<TreeFoldStore | null>(null);
 export interface TreeFoldControls {
     /**
      *
-     * @param {string} key - key of the node to set.
+     * @param {string | Iterable<string>} key - key (or keys) of the node to set.
      * @param {boolean} newState - the open/close state to use
      * @param {string} [prefix] - used to differentiate between multiple tree states, if relevant
      * @returns
      */
-    set: (key: string, newState: boolean, prefix?: string) => void;
+    set: (key: string | Iterable<string>, newState: boolean, prefix?: string) => void;
     /**
      *
-     * @param {string} key - the key of the node to toggle
+     * @param {string | Iterable<string>} key - the key (or keys) of the node to toggle
      * @param {string} [prefix] - used to differentiate between multiple tree states, if needed.
      * @returns
      */
-    toggle: (key: string, prefix?: string) => void;
+    toggle: (key: string | Iterable<string>, prefix?: string) => void;
     /**
      * re-syncs the internal state to coincide with the existing keys on a tree.
      * initializes new keys in internal state, removed unused keys from internal state.
@@ -130,16 +130,22 @@ export const TreeFold = forwardRef(({ children, startClosed = false }: TreeFoldP
         return state.current;
     }, []);
 
-    const set = useCallback((key: string, newState: boolean, prefix: string = "") => {
+    const set = useCallback((key: string | Iterable<string>, newState: boolean, prefix: string = "") => {
         state.current[prefix] = state.current[prefix] ?? {};
-        state.current[prefix][key] = newState;
+        state.current[prefix] = (typeof key === "string" ? [key] : [...key]).reduce((acc, each) => {
+            acc[each] = newState;
+            return acc;
+        }, state.current[prefix]);
         listeners.current.forEach((cb) => cb());
     }, []);
 
     const toggle = useCallback(
-        (key: string, prefix: string = "") => {
+        (key: string | Iterable<string>, prefix: string = "") => {
             state.current[prefix] = state.current[prefix] ?? {};
-            state.current[prefix][key] = !(state.current[prefix][key] ?? startClosed);
+            state.current[prefix] = (typeof key === "string" ? [key] : [...key]).reduce((acc, each) => {
+                acc[each] = !(state.current[prefix][each] ?? startClosed);
+                return acc;
+            }, state.current[prefix]);
             listeners.current.forEach((cb) => cb());
         },
         [startClosed]
