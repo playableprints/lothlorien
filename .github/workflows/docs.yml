@@ -1,7 +1,8 @@
 name: Docs
 on:
-    release:
-        types: [created]
+    push:
+        branches:
+            - main
 
 jobs:
     build-docs:
@@ -23,8 +24,6 @@ jobs:
                   cache: "pnpm"
             - name: Install All Deps
               run: pnpm install --no-lockfile
-              env:
-                  NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
             - name: Remove GitIgnore
               run: rm ./.gitignore
             - name: Build Docs
