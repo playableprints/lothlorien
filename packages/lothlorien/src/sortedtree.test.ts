@@ -1,6 +1,6 @@
 import { SortedTree } from "./sortedtree";
 import { Tree } from "./tree";
-import { Comparator } from "./types/helpers";
+import { Comparator } from "./types";
 
 const TEST_SORTER: Comparator<[string, number]> = ([ak, av], [bk, bv]) => av - bv;
 

@@ -1,5 +1,5 @@
 import { Err } from "./errors";
-import { IterableOr, Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper, Allocation, ReadonlyTreeEntry } from "./types/helpers";
+import { IterableOr, Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper, Allocation, ReadonlyTreeEntry } from "./types";
 
 export class Tree<T> {
     protected _store: {

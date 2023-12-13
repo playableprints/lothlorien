@@ -1,5 +1,5 @@
 import { Tree } from "./tree";
-import { IterableOr, KeyedDiscriminator, Comparator, TreeEntry } from "./types/helpers";
+import { IterableOr, KeyedDiscriminator, Comparator, TreeEntry } from "./types";
 
 const natsort = new Intl.Collator(undefined, {
     numeric: true,
