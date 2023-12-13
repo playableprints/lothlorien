@@ -4,3 +4,19 @@ This repo contains the source for two packages: [lothlorien](./packages/lothlori
 -   `lothlorien-react` builds on `lothlorien` to provide React UI components to render the data out.
 
 The name is taken from J.R.R Tolkien's Lord of the Rings, the forest that the elves reside in.
+
+[Documentation](github.com/playableprints/lothlorien)
+
+Installation
+
+```
+pnpm add @playableprints/lothlorien @playableprints/lothlorien-react
+```
+
+```
+yarn add @playableprints/lothlorien @playableprints/lothlorien-react
+```
+
+```
+npm i @playableprints/lothlorien @playableprints/lothlorien-react
+```

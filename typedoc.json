@@ -3,8 +3,8 @@
     "name": "Lothlorien",
     "entryPointStrategy": "packages",
     "includeVersion": false,
-    "hideGenerator": true
-    // "plugin": ["typedoc-plugin-merge-modules"]
-    // Potentially useful for debugging
-    // "logLevel": "Verbose"
+    "hideGenerator": true,
+    "navigationLinks": {
+        "Github": "https://github.com/playableprints/lothlorien"
+    }
 }
