@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Comparator, SortedTree, Tree } from "@playableprints/lothlorien";
-import { memo, ReactNode, useRef, useMemo, MutableRefObject, useEffect } from "react";
+import { memo, ReactNode, useRef, useMemo, MutableRefObject } from "react";
 import { proxy, useSnapshot } from "valtio";
 
 // React, why don't you have a genericable memo...

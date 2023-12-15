@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Tree } from "@playableprints/lothlorien";
-import { ForwardedRef, ReactNode, RefAttributes, createContext, forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useRef, useSyncExternalStore } from "react";
+import { ForwardedRef, ReactNode, RefAttributes, createContext, forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useSyncExternalStore } from "react";
 
 type TreeFoldStore = {
     get: () => { [key: string]: { [key: string]: boolean } };
@@ -85,6 +85,7 @@ export interface TreeFoldControls {
 /**
  * @prop {ReactNode} [children]
  * @prop {boolean} [startOpen] - if set, any tree node will start in a closed fold state unless a state for that node has been set already
+ * @prop {(key: string, state: boolean, prefix: string) => void} [onChange] fired whenever an toggle-state changes.
  *
  * @interface
  * @group Component Props
@@ -92,6 +93,7 @@ export interface TreeFoldControls {
 export type TreeFoldProps = {
     children?: ReactNode;
     startOpen?: boolean;
+    onChange?: (key: string, state: boolean, prefix: string) => void;
 };
 
 /**
@@ -112,9 +114,14 @@ export type TreeFoldProps = {
  * @group Components
  */
 
-export const TreeFold = forwardRef(({ children, startOpen = false }: TreeFoldProps, fRef: ForwardedRef<TreeFoldControls>) => {
+export const TreeFold = forwardRef(({ children, startOpen = false, onChange }: TreeFoldProps, fRef: ForwardedRef<TreeFoldControls>) => {
     const state = useRef<{ [key: string]: { [key: string]: boolean } }>({});
     const listeners = useRef<Set<() => void>>(new Set<() => void>());
+
+    const onChangeRef = useRef(onChange);
+    useEffect(() => {
+        onChangeRef.current = onChange;
+    }, [onChange]);
 
     const sync = useCallback(<T extends Tree<any>>(tree: T, prefix: string = "") => {
         state.current = {
@@ -134,6 +141,7 @@ export const TreeFold = forwardRef(({ children, startOpen = false }: TreeFoldPro
         state.current[prefix] = state.current[prefix] ?? {};
         state.current[prefix] = (typeof key === "string" ? [key] : [...key]).reduce((acc, each) => {
             acc[each] = newState;
+            onChangeRef.current?.(each, newState, prefix);
             return acc;
         }, state.current[prefix]);
         listeners.current.forEach((cb) => cb());
@@ -144,6 +152,7 @@ export const TreeFold = forwardRef(({ children, startOpen = false }: TreeFoldPro
             state.current[prefix] = state.current[prefix] ?? {};
             state.current[prefix] = (typeof key === "string" ? [key] : [...key]).reduce((acc, each) => {
                 acc[each] = !(state.current[prefix][each] ?? startOpen);
+                onChangeRef.current?.(each, acc[each], prefix);
                 return acc;
             }, state.current[prefix]);
             listeners.current.forEach((cb) => cb());
