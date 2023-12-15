@@ -84,14 +84,14 @@ export interface TreeFoldControls {
 
 /**
  * @prop {ReactNode} [children]
- * @prop {boolean} [startClosed] - if set, any tree node will start in a closed fold state unless a state for that node has been set already
+ * @prop {boolean} [startOpen] - if set, any tree node will start in a closed fold state unless a state for that node has been set already
  *
  * @interface
  * @group Component Props
  */
 export type TreeFoldProps = {
     children?: ReactNode;
-    startClosed?: boolean;
+    startOpen?: boolean;
 };
 
 /**
@@ -112,7 +112,7 @@ export type TreeFoldProps = {
  * @group Components
  */
 
-export const TreeFold = forwardRef(({ children, startClosed = false }: TreeFoldProps, fRef: ForwardedRef<TreeFoldControls>) => {
+export const TreeFold = forwardRef(({ children, startOpen = false }: TreeFoldProps, fRef: ForwardedRef<TreeFoldControls>) => {
     const state = useRef<{ [key: string]: { [key: string]: boolean } }>({});
     const listeners = useRef<Set<() => void>>(new Set<() => void>());
 
@@ -143,12 +143,12 @@ export const TreeFold = forwardRef(({ children, startClosed = false }: TreeFoldP
         (key: string | Iterable<string>, prefix: string = "") => {
             state.current[prefix] = state.current[prefix] ?? {};
             state.current[prefix] = (typeof key === "string" ? [key] : [...key]).reduce((acc, each) => {
-                acc[each] = !(state.current[prefix][each] ?? startClosed);
+                acc[each] = !(state.current[prefix][each] ?? startOpen);
                 return acc;
             }, state.current[prefix]);
             listeners.current.forEach((cb) => cb());
         },
-        [startClosed]
+        [startOpen]
     );
 
     const listen = useCallback((cb: () => void) => {
@@ -157,8 +157,8 @@ export const TreeFold = forwardRef(({ children, startClosed = false }: TreeFoldP
     }, []);
 
     const initial = useCallback(() => {
-        return startClosed;
-    }, [startClosed]);
+        return startOpen;
+    }, [startOpen]);
 
     const clear = useCallback((prefix: string = "") => {
         state.current[prefix] = {};

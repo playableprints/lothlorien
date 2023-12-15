@@ -181,3 +181,35 @@ const App = () => {
 ```
 
 You can also utilize the foldControls to toggle or set individual fold states from the outside using `foldControls.current.toggle` and `foldControls.current.set`
+
+# nodeProps
+
+You can supply a second type arg to `<TreeView>` to gain access to the `nodeProps` prop. Contents of `nodeProp` will be passed to all nodes of the tree.
+this is especially useful for Filtering: pass a filter state in via some state and the NodeRenderer will pick it up.
+
+```ts
+
+type Payload = {
+    name: string;
+}
+
+type Extra = {
+    filter: string;
+}
+
+const MyNodeRenderer: TreeNodeComponent<Tree<Payload>, Extra> = ({ filter, value, ...typicalProps}) => {
+    // if filter is empty or filter ane name match, render this node, otherwise don't;
+    return filter === "" || value.name.startsWith(filter) ? <div>{value.name}</div> : null;
+}
+
+const App = () => {
+    const tree = useTree<Payload>();
+
+    const [filter, setFilter] = useState<string>("");
+
+    return (
+        <input value={filter} onChange={(e) => { setFilter(e.currentTarget)}} />
+        <TreeView<Tree<Payload>, Extra> value={tree} renderer={MyNodeRenderer} nodeProps={{ filter }} />
+    );
+};
+```

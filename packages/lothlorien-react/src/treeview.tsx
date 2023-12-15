@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Comparator, SortedTree, Tree } from "@playableprints/lothlorien";
-import { memo, ReactNode, useRef, useMemo, MutableRefObject } from "react";
+import { memo, ReactNode, useRef, useMemo, MutableRefObject, useEffect } from "react";
 import { proxy, useSnapshot } from "valtio";
 
 // React, why don't you have a genericable memo...
@@ -9,6 +9,8 @@ const genericMemo: <T>(component: T) => T = memo;
 type PayloadOf<T> = T extends Tree<infer P> ? P : never;
 
 /**
+ * @template T - the type of tree that the component prop will be rendering
+ * @template E - extra props passed down from the <TreeView>
  * @prop nodeKey - the key of the node being rendered
  * @prop value - the value of this node of the tree
  * @prop treeRef - a reference to the tree object
@@ -16,12 +18,12 @@ type PayloadOf<T> = T extends Tree<infer P> ? P : never;
  * @interface
  * @group Component Props
  */
-export type TreeNodeComponentProps<T extends Tree<any>> = {
+export type TreeNodeComponentProps<T extends Tree<any>, E extends object = never> = {
     nodeKey: string;
     value: PayloadOf<T>;
     treeRef: T;
     childNodes: ReactNode;
-};
+} & ([E] extends [never] ? unknown : E);
 
 /**
  * A component helper type to define what a TreeView takes as a node renderer
@@ -46,7 +48,7 @@ export type TreeNodeComponentProps<T extends Tree<any>> = {
  * ```
  *
  */
-export type TreeNodeComponent<T extends Tree<any>> = (props: TreeNodeComponentProps<T>) => JSX.Element;
+export type TreeNodeComponent<T extends Tree<any>, E extends object = never> = (props: TreeNodeComponentProps<T, E>) => JSX.Element;
 
 /**
  * Creates and returns a stable {@link Tree} object
@@ -63,13 +65,16 @@ export const useTree = <P,>() => useRef<Tree<P>>(proxy(new Tree<P>()));
 export const useSortedTree = <P,>(sorter?: Comparator<[string, P]>) => useRef<SortedTree<P>>(proxy(new SortedTree<P>(sorter)));
 
 /**
+ * @template T - the type of tree that the component prop will be rendering
+ * @template E - the type of the extra props that will be passed down to each node.
  * @prop value - a RefObject of the tree that will be rendered.
  * @prop renderer - the component that will be used to render the tree's nodes.
+ * @prop nodeProps - the extra props that will be passed down to each node renderer.
  * @interface
  * @group Component Props
  */
 
-export type TreeViewProps<T extends Tree<any>> = { value: MutableRefObject<T>; renderer: TreeNodeComponent<T> };
+export type TreeViewProps<T extends Tree<any>, E extends object = never> = { value: MutableRefObject<T>; renderer: TreeNodeComponent<T, E> } & ([E] extends [never] ? { nodeProps?: E } : { nodeProps: E });
 
 /**
  * Renders a given tree with each node being rendered by the included renderer component prop.
@@ -93,17 +98,25 @@ export type TreeViewProps<T extends Tree<any>> = { value: MutableRefObject<T>; r
  * ```
  *
  */
-export const TreeView = <T extends Tree<any>>(props: TreeViewProps<T>) => {
-    const { value, renderer } = props;
+
+export const TreeView = <T extends Tree<any>, E extends object = never>({ value, renderer, nodeProps }: TreeViewProps<T, E>) => {
     const snapshot = useSnapshot(value.current);
+    const npRef = useRef<E>(proxy(nodeProps));
+    const nP = useSnapshot(npRef.current);
+
+    useEffect(() => {
+        console.log("updated");
+        console.log(nP);
+    }, [nP]);
+
     return snapshot.rootKeys().map((key) => {
-        return <NodeRenderWrapper<T> renderer={renderer} nodeKey={key} key={key} treeRef={value.current} />;
+        return <NodeRenderWrapper<T, E> nodeProps={nP as E} renderer={renderer} nodeKey={key} key={key} treeRef={value.current} />;
     });
 };
 
 // Passthrough that uses our renderer prop and sets up pre-memoized props for it.
-const NodeRenderWrapper = genericMemo(<T extends Tree<any>>(props: { nodeKey: string; renderer: TreeNodeComponent<T>; treeRef: T }) => {
-    const { nodeKey, renderer: Renderer, treeRef } = props;
+const NodeRenderWrapper = genericMemo(<T extends Tree<any>, E extends object = never>(props: { nodeKey: string; renderer: TreeNodeComponent<T, E>; treeRef: T; nodeProps: E }) => {
+    const { nodeKey, renderer: Renderer, treeRef, nodeProps } = props;
     const snapshot = useSnapshot(treeRef);
 
     const { children, value } = useMemo(() => {
@@ -113,10 +126,10 @@ const NodeRenderWrapper = genericMemo(<T extends Tree<any>>(props: { nodeKey: st
     // setup for recursion
     const childNodes = useMemo(() => {
         return children.map((cId) => {
-            return <NodeRenderWrapper<T> key={cId} nodeKey={cId} renderer={Renderer} treeRef={treeRef} />;
+            return <NodeRenderWrapper<T, E> nodeProps={nodeProps} treeRef={treeRef} renderer={Renderer} key={cId} nodeKey={cId} />;
         });
-    }, [Renderer, children, treeRef]);
+    }, [Renderer, children, treeRef, nodeProps]);
 
     // our custom renderer comes to fruition.
-    return <Renderer nodeKey={nodeKey} value={value as PayloadOf<T>} treeRef={treeRef} childNodes={childNodes} />;
+    return <Renderer {...nodeProps} treeRef={treeRef} nodeKey={props.nodeKey} value={value} childNodes={childNodes} />;
 });
