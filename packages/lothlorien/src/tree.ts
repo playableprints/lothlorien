@@ -428,17 +428,22 @@ export class Tree<T> {
      */
     prune(key: string): Tree<T> {
         const res = new Tree<T>();
+        const current = { ...this._store };
         const migrate = (k: string) => {
             const { parent, children, value } = this._store[k];
             res.add(k, k === key ? null : parent, value);
             children.forEach(migrate);
-            delete this._store[k];
+            delete current[k];
         };
         const pKey = this.parentKey(key);
         if (pKey !== undefined && pKey !== null) {
-            this._store[pKey].children = this._store[pKey].children.filter((k) => k !== key);
+            current[pKey] = {
+                ...current[pKey],
+                children: current[pKey].children.filter((k) => k !== key),
+            };
         }
         migrate(key);
+        this._store = current;
         return res;
     }
 
@@ -474,17 +479,19 @@ export class Tree<T> {
      * @group Modify
      */
     condense(merger: (parent: TreeEntry<T>, child: TreeEntry<T>) => void | { key: string; value: T }): void {
+        const current = { ...this._store };
+
         const doMerge = (pKey: string) => {
-            const pNode = this._store[pKey];
+            const pNode = current[pKey];
             if (pNode.children.length === 1) {
                 const cKey = pNode.children[0];
-                const cNode = this._store[cKey];
+                const cNode = current[cKey];
                 const r = merger(pNode, cNode);
                 if (r) {
                     // If 'merger' returns a new node, replace a and b with the new node in 'hold'
-                    delete this._store[pKey];
-                    delete this._store[cKey];
-                    this._store[r.key] = {
+                    delete current[pKey];
+                    delete current[cKey];
+                    current[r.key] = {
                         key: r.key,
                         value: r.value,
                         parent: pNode.parent,
@@ -493,7 +500,10 @@ export class Tree<T> {
 
                     // Update parent-child relationship for the merged node
                     if (pNode.parent && this._store[pNode.parent]) {
-                        this._store[pNode.parent].children = [...this._store[pNode.parent].children.filter((t) => t !== pKey), r.key];
+                        current[pNode.parent] = {
+                            ...current[pNode.parent],
+                            children: [...current[pNode.parent].children.filter((t) => t !== pKey), r.key],
+                        };
                     }
                     doMerge(r.key);
                 } else {
@@ -506,6 +516,8 @@ export class Tree<T> {
         };
         // to de determined: should this be on rootKeys or rootKeys.children...
         this.rootKeys().forEach(doMerge);
+
+        this._store = current;
     }
 
     /**
@@ -573,8 +585,10 @@ export class Tree<T> {
             }
         }
 
+        let current = { ...this._store };
+
         const doAllocation = (k: string) => {
-            if (this.has(k)) {
+            if (k in current) {
                 // already in tree
                 return;
             }
@@ -583,13 +597,26 @@ export class Tree<T> {
                 throw Err.UNALLOCATED(k);
             }
             const { parent, value } = hold[k];
-            if (parent !== null && !this.has(parent)) {
+            if (parent !== null && !(parent in current)) {
                 doAllocation(parent);
             }
-            this.add(k, parent, value);
+            current[k] = {
+                key: k,
+                parent,
+                children: [],
+                value,
+            };
+            if (parent !== null) {
+                current[parent] = {
+                    ...current[parent],
+                    children: [...current[parent].children, k],
+                };
+            }
         };
 
         Object.keys(hold).forEach(doAllocation);
+
+        this._store = current;
     }
 
     /* Hierarchy */
