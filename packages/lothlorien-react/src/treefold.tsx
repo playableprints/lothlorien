@@ -234,7 +234,7 @@ export const useTreeFold = (key: string, prefix: string = "") => {
     }
 
     const isOpen = useSyncExternalStore(store.listen, () => {
-        return store.get()[prefix][key] ?? store.initial();
+        return store.get()?.[prefix]?.[key] ?? store.initial();
     });
 
     const toggle = useCallback(() => {
