@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Tree } from "@playableprints/lothlorien";
-import { memo, ReactNode, HTMLAttributes, useMemo, Fragment } from "react";
+import { memo, ReactNode, HTMLAttributes, Fragment, useState, useEffect } from "react";
 import { useSnapshot } from "valtio";
 
 // defaults are ascii art, becuase it's wonderful :3
@@ -63,23 +63,67 @@ export type DepthMarkerProps<T> = { treeRef: T; nodeKey: string; spacer?: ReactN
 export const DepthMarker = genericMemo(<T extends Tree<any>>(props: DepthMarkerProps<T> & HTMLAttributes<HTMLSpanElement>) => {
     const { treeRef, nodeKey, rtl = false, spacer = DEFAULT_SPACER, pipe = DEFAULT_PIPE, elbow = DEFAULT_ELBOW, tee = DEFAULT_TEE, children, ...rest } = props;
     const snapshot = useSnapshot(treeRef);
+    const [theKeys, setTheKeys] = useState<Shapes[]>(makeShapeList(nodeKey, snapshot, rtl));
 
-    const isLastList = useMemo(() => {
-        const theKeys = rtl ? [nodeKey, ...snapshot.ancestorKeys(nodeKey)] : [...snapshot.ancestorKeys(nodeKey).reverse(), nodeKey];
-        return theKeys.map((aKey, i, arr) => {
-            const pKey = snapshot.parentKey(aKey);
-            const siblings = pKey ? snapshot.childrenKeys(pKey) : snapshot.rootKeys();
-            const isLastOfSiblings = siblings.indexOf(aKey) === siblings.length - 1;
-            const isFinal = rtl ? i === 0 : i === arr.length - 1;
-            return <Fragment key={i}>{isFinal ? (isLastOfSiblings ? elbow : tee) : isLastOfSiblings ? spacer : pipe}</Fragment>;
+    useEffect(() => {
+        setTheKeys((prev) => {
+            const res = makeShapeList(nodeKey, snapshot, rtl);
+            return areArraysEqual(prev, res) ? prev : res;
         });
-    }, [snapshot, nodeKey, elbow, tee, spacer, pipe, rtl]);
+    }, [snapshot, rtl, nodeKey]);
 
     return (
         <span {...rest}>
             {rtl ? children : null}
-            {isLastList}
+            <DepthMarkerRenderer shapes={theKeys} tee={tee} spacer={spacer} pipe={pipe} elbow={elbow} />
             {!rtl ? children : null}
         </span>
     );
 });
+
+type Shapes = "│" | " " | "├" | "╰";
+
+// TODO: types are complaining about snapshot...
+const makeShapeList = (nodeKey: string, snapshot: any, rtl: boolean) => {
+    return rtl
+        ? [nodeKey, ...snapshot.ancestorKeys(nodeKey)]
+        : [...snapshot.ancestorKeys(nodeKey).reverse(), nodeKey].map((aKey, i, arr) => {
+              const pKey = snapshot.parentKey(aKey);
+              const siblings = pKey ? snapshot.childrenKeys(pKey) : snapshot.rootKeys();
+              const isLastOfSiblings = siblings.indexOf(aKey) === siblings.length - 1;
+              const isFinal = rtl ? i === 0 : i === arr.length - 1;
+              return isFinal ? (isLastOfSiblings ? "╰" : "├") : isLastOfSiblings ? " " : "│";
+          });
+};
+
+const DepthMarkerRenderer = genericMemo(({ shapes, tee, spacer, pipe, elbow }: { shapes: Shapes[]; spacer?: ReactNode; pipe?: ReactNode; elbow?: ReactNode; tee?: ReactNode }) => {
+    return (
+        <>
+            {shapes.map((each, i) => {
+                switch (each) {
+                    case " ":
+                        return <Fragment key={i}>{spacer}</Fragment>;
+                    case "│":
+                        return <Fragment key={i}>{pipe}</Fragment>;
+                    case "├":
+                        return <Fragment key={i}>{tee}</Fragment>;
+                    case "╰":
+                        return <Fragment key={i}>{elbow}</Fragment>;
+                }
+            })}
+        </>
+    );
+});
+
+const areArraysEqual = <T,>(a: T[], b: T[]) => {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (a.length !== b.length) return false;
+
+    //clone and sort?
+
+    for (let i = 0; i < a.length; ++i) {
+        if (a[i] !== b[i]) return false;
+    }
+    return true;
+};

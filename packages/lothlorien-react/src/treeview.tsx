@@ -103,12 +103,6 @@ export const TreeView = <T extends Tree<any>, E extends object = never>({ value,
     const snapshot = useSnapshot(value.current);
     const npRef = useRef<E>(proxy(nodeProps));
     const nP = useSnapshot(npRef.current);
-
-    useEffect(() => {
-        console.log("updated");
-        console.log(nP);
-    }, [nP]);
-
     return snapshot.rootKeys().map((key) => {
         return <NodeRenderWrapper<T, E> nodeProps={nP as E} renderer={renderer} nodeKey={key} key={key} treeRef={value.current} />;
     });
