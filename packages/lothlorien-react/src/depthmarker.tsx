@@ -86,7 +86,7 @@ type Shapes = "│" | " " | "├" | "╰";
 
 // TODO: types are complaining about snapshot...
 const makeShapeList = (nodeKey: string, snapshot: any, rtl: boolean, skipFirst: boolean) => {
-    return (rtl ? [nodeKey, ...snapshot.ancestorKeys(nodeKey)] : [...snapshot.ancestorKeys(nodeKey).reverse(), nodeKey]).slice(skipFirst ? 0 : 1).map((aKey, i, arr) => {
+    return (rtl ? [nodeKey, ...snapshot.ancestorKeys(nodeKey)] : [...snapshot.ancestorKeys(nodeKey).reverse(), nodeKey]).slice(skipFirst ? 1 : 0).map((aKey, i, arr) => {
         const pKey = snapshot.parentKey(aKey);
         const siblings = pKey ? snapshot.childrenKeys(pKey) : snapshot.rootKeys();
         const isLastOfSiblings = siblings.indexOf(aKey) === siblings.length - 1;
