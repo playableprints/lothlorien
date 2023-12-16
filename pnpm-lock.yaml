@@ -39,10 +39,10 @@ importers:
   packages/lothlorien-react:
     dependencies:
       '@playableprints/lothlorien':
-        specifier: ^0.1.2
+        specifier: ^0.1.9
         version: link:../lothlorien
       valtio:
-        specifier: ^1.12.1
+        specifier: ^1.6.3
         version: 1.12.1(@types/react@18.2.42)(react@18.2.0)
     devDependencies:
       '@types/jest':
