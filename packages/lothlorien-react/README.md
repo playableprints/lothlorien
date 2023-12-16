@@ -164,8 +164,8 @@ const App = () => {
 
     // re-populate tree when source is changed
     useEffect(() => {
-        tree.current.clear();
-        tree.current.populate(source, () => {});
+        tree.clear();
+        tree.populate(source, () => {});
 
         // update fold controls will keep current fold state for keys that still exist, initialize new keys, and remove any now-unused keys.
         // the prefix let's you target a specific fold-state collection, but is optional if you're only handling one tree's state.

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Comparator, SortedTree, Tree } from "@playableprints/lothlorien";
-import { memo, ReactNode, useRef, useMemo, MutableRefObject } from "react";
+import { memo, ReactNode, useRef, useMemo } from "react";
 import { proxy, useSnapshot } from "valtio";
 
 // React, why don't you have a genericable memo...
@@ -22,7 +22,7 @@ export type TreeNodeComponentProps<T extends Tree<any>, E extends object = never
     nodeKey: string;
     value: PayloadOf<T>;
     treeRef: T;
-    childNodes: ReactNode;
+    childNodes: ReactNode[];
 } & ([E] extends [never] ? unknown : E);
 
 /**
@@ -51,18 +51,44 @@ export type TreeNodeComponentProps<T extends Tree<any>, E extends object = never
 export type TreeNodeComponent<T extends Tree<any>, E extends object = never> = (props: TreeNodeComponentProps<T, E>) => JSX.Element;
 
 /**
- * Creates and returns a stable {@link Tree} object
+ * Creates and returns a stable {@link Tree} proxy object
  * @group Hooks
  */
 
-export const useTree = <P,>() => useRef<Tree<P>>(proxy(new Tree<P>()));
+export const useTree = <P,>() => useRef<Tree<P>>(proxy(new Tree<P>())).current;
 
 /**
- * Creates and returns a stable {@link SortedTree} object
+ * Takes a {@link Tree} proxy object and returns a snapshot of it.
  * @group Hooks
  */
 
-export const useSortedTree = <P,>(sorter?: Comparator<[string, P]>) => useRef<SortedTree<P>>(proxy(new SortedTree<P>(sorter)));
+export const useTreeSnapshot = <P,>(f: Tree<P>) => useSnapshot(f);
+
+/**
+ * Creates and returns a stable {@link Tree} proxy object, for use outside of react components or within callbacks.
+ */
+
+export const createTreeProxy = <P,>() => proxy(new Tree<P>());
+
+/**
+ * Creates and returns a stable {@link SortedTree} proxy object
+ * @group Hooks
+ */
+
+export const useSortedTree = <P,>(sorter?: Comparator<[string, P]>) => useRef<SortedTree<P>>(proxy(new SortedTree<P>(sorter))).current;
+
+/**
+ * Takes a {@link SortedTree} proxy object and returns a snapshot of it.
+ * @group Hooks
+ */
+
+export const useSortedTreeSnapshot = <P,>(f: SortedTree<P>) => useSnapshot(f);
+
+/**
+ * Creates and returns a stable {@link SortedTree} proxy object, for use outside of react components or within callbacks.
+ */
+
+export const createSortedTreeProxy = <P,>(sorter?: Comparator<[string, P]>) => proxy(new SortedTree<P>(sorter));
 
 /**
  * @template T - the type of tree that the component prop will be rendering
@@ -74,7 +100,7 @@ export const useSortedTree = <P,>(sorter?: Comparator<[string, P]>) => useRef<So
  * @group Component Props
  */
 
-export type TreeViewProps<T extends Tree<any>, E extends object = never> = { value: MutableRefObject<T>; renderer: TreeNodeComponent<T, E> } & ([E] extends [never] ? { nodeProps?: E } : { nodeProps: E });
+export type TreeViewProps<T extends Tree<any>, E extends object = never> = { value: T; renderer: TreeNodeComponent<T, E> } & ([E] extends [never] ? { nodeProps?: E } : { nodeProps: E });
 
 /**
  * Renders a given tree with each node being rendered by the included renderer component prop.
@@ -100,11 +126,11 @@ export type TreeViewProps<T extends Tree<any>, E extends object = never> = { val
  */
 
 export const TreeView = <T extends Tree<any>, E extends object = never>({ value, renderer, nodeProps }: TreeViewProps<T, E>) => {
-    const snapshot = useSnapshot(value.current);
+    const snapshot = useSnapshot(value);
     const npRef = useRef<E>(proxy(nodeProps));
-    const nP = useSnapshot(npRef.current);
+    const nP = useSnapshot(npRef);
     return snapshot.rootKeys().map((key) => {
-        return <NodeRenderWrapper<T, E> nodeProps={nP as E} renderer={renderer} nodeKey={key} key={key} treeRef={value.current} />;
+        return <NodeRenderWrapper<T, E> nodeProps={nP as E} renderer={renderer} nodeKey={key} key={key} treeRef={value} />;
     });
 };
 
