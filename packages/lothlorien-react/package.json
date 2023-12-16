@@ -26,10 +26,10 @@
     },
     "homepage": "https://playableprints.github.io/lothlorien/index.html",
     "dependencies": {
-        "@playableprints/lothlorien": "^0.1.11"
+        "@playableprints/lothlorien": "^0.1.11",
+        "valtio": "^1.6.3"
     },
     "peerDependencies": {
-        "valtio": "^1.6.3",
         "react": "^18.2.0"
     },
     "devDependencies": {
