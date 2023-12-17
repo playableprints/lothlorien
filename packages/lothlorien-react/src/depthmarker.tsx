@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Tree } from "@playableprints/lothlorien";
-import { memo, ReactNode, HTMLAttributes, Fragment, useState, useEffect } from "react";
+import { memo, ReactNode, HTMLAttributes, Fragment, useState, useEffect, MutableRefObject } from "react";
 import { useSnapshot } from "valtio";
 
 // defaults are ascii art, becuase it's wonderful :3
@@ -40,7 +40,7 @@ const genericMemo: <T>(component: T) => T = memo;
  * ```
  */
 
-export type DepthMarkerProps<T> = { treeRef: T; nodeKey: string; spacer?: ReactNode; pipe?: ReactNode; elbow?: ReactNode; tee?: ReactNode; rtl?: boolean; skipFirst?: boolean };
+export type DepthMarkerProps<T> = { treeRef: MutableRefObject<T>; nodeKey: string; spacer?: ReactNode; pipe?: ReactNode; elbow?: ReactNode; tee?: ReactNode; rtl?: boolean; skipFirst?: boolean };
 
 /**
  * Renders the depth marker for a given tree node
@@ -63,7 +63,7 @@ export type DepthMarkerProps<T> = { treeRef: T; nodeKey: string; spacer?: ReactN
  */
 export const DepthMarker = genericMemo(<T extends Tree<any>>(props: DepthMarkerProps<T> & HTMLAttributes<HTMLSpanElement>) => {
     const { treeRef, nodeKey, rtl = false, spacer = DEFAULT_SPACER, pipe = DEFAULT_PIPE, elbow = DEFAULT_ELBOW, tee = DEFAULT_TEE, children, skipFirst = false, ...rest } = props;
-    const snapshot = useSnapshot(treeRef);
+    const snapshot = useSnapshot(treeRef.current);
     const [theKeys, setTheKeys] = useState<Shapes[]>(makeShapeList(nodeKey, snapshot, rtl, skipFirst));
 
     useEffect(() => {

@@ -21,7 +21,7 @@ type PayloadOf<T> = T extends Tree<infer P> ? P : never;
 export type TreeNodeComponentProps<T extends Tree<any>, E extends object = never> = {
     nodeKey: string;
     value: PayloadOf<T>;
-    treeRef: T;
+    treeRef: MutableRefObject<T>;
     childNodes: ReactNode[];
 } & ([E] extends [never] ? unknown : E);
 
@@ -128,16 +128,16 @@ export type TreeViewProps<T extends Tree<any>, E extends object = never> = { val
 export const TreeView = <T extends Tree<any>, E extends object = never>({ value, renderer, nodeProps }: TreeViewProps<T, E>) => {
     const snapshot = useSnapshot(value.current);
     const npRef = useRef<E>(proxy(nodeProps));
-    const nP = useSnapshot(npRef);
+    const nP = useSnapshot(npRef.current);
     return snapshot.rootKeys().map((key) => {
-        return <NodeRenderWrapper<T, E> nodeProps={nP as E} renderer={renderer} nodeKey={key} key={key} treeRef={value.current} />;
+        return <NodeRenderWrapper<T, E> nodeProps={nP as E} renderer={renderer} nodeKey={key} key={key} treeRef={value} />;
     });
 };
 
 // Passthrough that uses our renderer prop and sets up pre-memoized props for it.
-const NodeRenderWrapper = genericMemo(<T extends Tree<any>, E extends object = never>(props: { nodeKey: string; renderer: TreeNodeComponent<T, E>; treeRef: T; nodeProps: E }) => {
+const NodeRenderWrapper = genericMemo(<T extends Tree<any>, E extends object = never>(props: { nodeKey: string; renderer: TreeNodeComponent<T, E>; treeRef: MutableRefObject<T>; nodeProps: E }) => {
     const { nodeKey, renderer: Renderer, treeRef, nodeProps } = props;
-    const snapshot = useSnapshot(treeRef);
+    const snapshot = useSnapshot(treeRef.current);
 
     const { children, value } = useMemo(() => {
         return snapshot.entry(nodeKey)!;
