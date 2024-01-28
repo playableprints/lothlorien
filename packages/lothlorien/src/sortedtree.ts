@@ -286,6 +286,35 @@ export class SortedTree<T> extends Tree<T> {
     // OVERRIDE SUPERCLASS METHODS
 
     /**
+     * @group Traversal
+     */
+    rootKeys(): string[] {
+        return this._keys.filter((a) => this._store[a].parent === null);
+    }
+
+    /**
+     * Returns an array of keys representing the leaf nodes of the tree.
+     * @returns {string[]} An array of keys representing the leaf nodes.
+     * @group Traversal
+     */
+    leafKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
+        const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
+
+        //get all leaves
+        const allLeaves = this._keys.filter((a) => this._store[a].children.length === 0);
+
+        //filter by if ancestors is among 'from' list
+        return allLeaves.filter((leafKey) => {
+            for (const ancestor of this.ancestorKeys(leafKey)) {
+                if (from.includes(ancestor)) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+
+    /**
      * @group Modify
      */
     override clear() {

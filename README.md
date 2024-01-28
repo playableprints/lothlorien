@@ -5,7 +5,7 @@ This repo contains the source for two packages: [lothlorien](./packages/lothlori
 
 The name is taken from J.R.R Tolkien's Lord of the Rings, the forest that the elves reside in.
 
-[Documentation](github.com/playableprints/lothlorien)
+[Documentation](https://playableprints.github.io/lothlorien/)
 
 Installation
 
