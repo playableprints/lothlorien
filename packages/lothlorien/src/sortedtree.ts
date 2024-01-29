@@ -288,7 +288,7 @@ export class SortedTree<T> extends Tree<T> {
     /**
      * @group Traversal
      */
-    rootKeys(): string[] {
+    override rootKeys(): string[] {
         return this._keys.filter((a) => this._store[a].parent === null);
     }
 
@@ -297,7 +297,7 @@ export class SortedTree<T> extends Tree<T> {
      * @returns {string[]} An array of keys representing the leaf nodes.
      * @group Traversal
      */
-    leafKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
+    override leafKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
         const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
 
         //get all leaves
@@ -327,6 +327,7 @@ export class SortedTree<T> extends Tree<T> {
      */
     override populate<F>(list: Iterable<F>, allocator: (data: F) => void | IterableOr<{ key: string; value: T; parent: string | null }>): void {
         super.populate(list, allocator);
+        this._keys = Object.keys(this._store);
         this.sort();
     }
 
@@ -379,6 +380,17 @@ export class SortedTree<T> extends Tree<T> {
     /**
      * @group Modify
      */
+
+    override move(key: string, parent: string | null): void {
+        if (this.has(key) && (parent === null || this.has(parent))) {
+            super.move(key, parent);
+            this.sort();
+        }
+    }
+
+    /**
+     * @group Modify
+     */
     override trim(key: string): T | undefined {
         const res = super.trim(key);
         if (res) {
@@ -405,6 +417,7 @@ export class SortedTree<T> extends Tree<T> {
     override pluck(key: string): T | undefined {
         const res = super.pluck(key);
         if (res) {
+            this._keys = Object.keys(this._store);
             this.sort();
         }
         return res;
@@ -437,6 +450,7 @@ export class SortedTree<T> extends Tree<T> {
     override splice(key: string): T | undefined {
         const res = super.splice(key);
         if (res) {
+            this._keys = Object.keys(this._store);
             this.sort();
         }
         return res;
