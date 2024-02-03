@@ -1,3 +1,4 @@
-export { TreeView, TreeNodeComponent, useTree, useSortedTree, TreeNodeComponentProps, TreeViewProps, createSortedTreeProxy, createTreeProxy, useSortedTreeSnapshot, useTreeSnapshot } from "./treeview";
+export { TreeView, TreeViewProps } from "./treeview";
+export { LazyTreeView, LazyTreeViewProps } from "./lazytreeview";
 export { DepthMarker, DepthMarkerProps } from "./depthmarker";
-export { useTreeFold, TreeFoldControls, TreeFold, TreeFoldProps } from "./treefold";
+export { TreeNodeComponent, useTree, useSortedTree, TreeNodeComponentProps, useFoldState, TreeFoldControls, useFoldControls, OnFoldHandler } from "./util";

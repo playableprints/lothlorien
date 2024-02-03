@@ -89,20 +89,6 @@ test("initialization", () => {
     expect(theTree.get("/")).toBe("root");
 });
 
-test.skip("all class methods are bound", () => {
-    const dumbTree = new Tree();
-
-    const staticMethods = Object.getOwnPropertyNames(Tree.prototype)
-        .filter((v) => v !== "constructor" && typeof Tree.prototype[v as keyof typeof Tree.prototype] === "function")
-        .sort();
-
-    const methods = Object.keys(dumbTree)
-        .filter((v) => v !== "_store" && typeof dumbTree[v as keyof typeof Tree.prototype] === "function")
-        .sort();
-
-    expect(staticMethods).toStrictEqual(methods);
-});
-
 describe("status operations", () => {
     test("has - tree has key", () => {
         const theTree = makeTreeAlpha();

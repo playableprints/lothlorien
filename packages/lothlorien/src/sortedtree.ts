@@ -338,6 +338,12 @@ export class SortedTree<T> extends Tree<T> {
     // overriding this because I don't want to sort *everything* on every insertion when I can just sort a specific subset after insertion.
     override add(key: string, parent: string | null, value: T): void {
         super.add(key, parent, value);
+        this._keys.push(key);
+        this.sort();
+
+        /* FIXME: This is broken */
+        /*
+
         if (parent === null) {
             this._keys.push(key);
             // gather index ranges of where roots are in the _keys array and where all their contents begin and end.
@@ -375,6 +381,7 @@ export class SortedTree<T> extends Tree<T> {
             });
             this._keys.splice(idx + 1, this._store[parent].children.length - 1, ...this._store[parent].children);
         }
+        */
     }
 
     /**
@@ -461,6 +468,7 @@ export class SortedTree<T> extends Tree<T> {
      */
     override condense(merger: (a: TreeEntry<T>, b: TreeEntry<T>) => void | { key: string; value: T }): void {
         super.condense(merger);
+        this._keys = Object.keys(this._store);
         this.sort();
     }
 
@@ -469,6 +477,7 @@ export class SortedTree<T> extends Tree<T> {
      */
     override detach(key: string | null): void {
         super.detach(key);
+        this._keys = Object.keys(this._store);
         this.sort();
     }
 }

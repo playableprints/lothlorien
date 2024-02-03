@@ -12,21 +12,40 @@ const makeTreeAlpha = () => {
     theTree.add("alpha/1/1/1", "alpha/1/1", 49);
     theTree.add("alpha/1/2", "alpha/1", 38);
     theTree.add("alpha/1/3", "alpha/1", 37);
-    theTree.add("alpha/1/3/1", "alpha/1/3", 49);
+    theTree.add("alpha/1/3/1", "alpha/1/3", 48);
     theTree.add("alpha/2", "alpha", 28);
-    theTree.add("alpha/2/1", "alpha/2", 39);
-    theTree.add("alpha/2/2", "alpha/2", 38);
+    theTree.add("alpha/2/1", "alpha/2", 36);
+    theTree.add("alpha/2/2", "alpha/2", 35);
 
     return theTree;
+    /*
+"alpha", //19
+    "alpha/2", //28
+        "alpha/2/2", //35 -leaf
+        "alpha/2/1", //36 -leaf
+    "alpha/1", //29
+        "alpha/1/3", //37
+            "alpha/1/3/1", //48 -leaf
+        "alpha/1/2", //38 -leaf
+        "alpha/1/1", //39
+            "alpha/1/1/1", //49 -leaf
+    */
 };
 
 const makeTreeBeta = () => {
     const theTree = new SortedTree<number>(TEST_SORTER);
     theTree.add("beta", null, 18);
-    theTree.add("beta/1", "beta", 29);
-    theTree.add("beta/2", "beta", 28);
-    theTree.add("beta/1/1", "beta/1", 39);
+    theTree.add("beta/1", "beta", 27);
+    theTree.add("beta/2", "beta", 26);
+    theTree.add("beta/1/1", "beta/1", 34);
     return theTree;
+
+    /*
+"beta", //18
+    "beta/2", //26
+    "beta/1", //27
+        "beta/1/1", //34
+    */
 };
 
 const makeTreeMulti = () => {
@@ -39,16 +58,16 @@ const makeTreeMulti = () => {
     theTree.add("alpha/1/1/1", "alpha/1/1", 49);
     theTree.add("alpha/1/2", "alpha/1", 38);
     theTree.add("alpha/1/3", "alpha/1", 37);
-    theTree.add("alpha/1/3/1", "alpha/1/3", 49);
+    theTree.add("alpha/1/3/1", "alpha/1/3", 48);
     theTree.add("alpha/2", "alpha", 28);
-    theTree.add("alpha/2/1", "alpha/2", 39);
-    theTree.add("alpha/2/2", "alpha/2", 38);
+    theTree.add("alpha/2/1", "alpha/2", 36);
+    theTree.add("alpha/2/2", "alpha/2", 35);
 
     // second disconnected subtree
     theTree.add("beta", null, 18);
-    theTree.add("beta/1", "beta", 29);
-    theTree.add("beta/2", "beta", 28);
-    theTree.add("beta/1/1", "beta/1", 39);
+    theTree.add("beta/1", "beta", 27);
+    theTree.add("beta/2", "beta", 26);
+    theTree.add("beta/1/1", "beta/1", 34);
 
     return theTree;
 };
@@ -57,28 +76,6 @@ test("initialization", () => {
     const theTree = new SortedTree<string>();
     theTree.add("/", null, "root");
     expect(theTree.get("/")).toBe("root");
-});
-
-const BUILTINS = ["_store", "_keys", "_comparator"];
-
-test.skip("all class methods are bound", () => {
-    const dumbTree = new SortedTree();
-
-    const methodSet = new Set<string>();
-    Object.getOwnPropertyNames(SortedTree.prototype).map((each) => {
-        methodSet.add(each);
-    });
-    Object.getOwnPropertyNames(Tree.prototype).map((each) => {
-        methodSet.add(each);
-    });
-
-    const staticMethods = [...methodSet].filter((v) => v !== "constructor" && typeof SortedTree.prototype[v as keyof typeof SortedTree.prototype] === "function").sort();
-
-    const methods = Object.keys(dumbTree)
-        .filter((v) => !BUILTINS.includes(v) && typeof dumbTree[v as keyof typeof SortedTree.prototype] === "function")
-        .sort();
-
-    expect(staticMethods).toStrictEqual(methods);
 });
 
 describe("status operations", () => {
@@ -250,14 +247,14 @@ describe("advanced CRUD operations", () => {
         expect(tree.deepKeys()).toStrictEqual([
             "alpha", //19
                 "alpha/2", //28
-                    "alpha/2/2", //38
-                    "alpha/2/1", //39
+                    "alpha/2/2", //35
+                    "alpha/2/1", //36
                 "alpha/1", //29
                     "alpha/1/3", //37
-                        "alpha/1/3/1", //49
+                        "alpha/1/3/1", //48
                     "alpha/1/2", //38
                     "alpha/1/1", //39
-                        "alpha/1/1/1" //49
+                        "alpha/1/1/1", //49
         ]);
     });
 
@@ -266,9 +263,9 @@ describe("advanced CRUD operations", () => {
         /* prettier-ignore */
         expect(tree.deepKeys()).toStrictEqual([
             "beta", //18
-                "beta/2", //28
-                "beta/1", //29
-                    "beta/1/1", //39
+                "beta/2", //26
+                "beta/1", //27
+                    "beta/1/1", //34
         ]);
     });
 
@@ -281,20 +278,22 @@ describe("advanced CRUD operations", () => {
 
             /* prettier-ignore */
             expect(t1.deepKeys()).toStrictEqual([
+
                 "alpha", //19
-                    "alpha/2", //28
-                        "alpha/2/2", //38
-                        "alpha/2/1", //39
-                    "alpha/1", //29
-                        "alpha/1/3", //37
-                            "alpha/1/3/1", //49
-                                "beta", //18
-                                "beta/2", //28
-                                "beta/1", //29
-                                    "beta/1/1", //39
-                        "alpha/1/2", //38
-                        "alpha/1/1", //39
-                            "alpha/1/1/1" //49
+                "alpha/2", //28
+                    "alpha/2/2", //35
+                    "alpha/2/1", //36
+                "alpha/1", //29
+                    "alpha/1/3", //37
+                        "alpha/1/3/1", //48
+                        "beta", //18
+                "beta/2", //26
+                "beta/1", //27
+                    "beta/1/1", //34
+                    "alpha/1/2", //38
+                    "alpha/1/1", //39
+                        "alpha/1/1/1", //49
+
             ]);
         });
 
@@ -435,14 +434,36 @@ describe("advanced CRUD operations", () => {
 
     test("truncate (remove from tree at given node and below; inclusive)", () => {
         const tree = makeTreeAlpha();
-        expect(tree.deepKeys()).toStrictEqual(["alpha", "alpha/2", "alpha/2/2", "alpha/2/1", "alpha/1", "alpha/1/3", "alpha/1/3/1", "alpha/1/2", "alpha/1/1", "alpha/1/1/1"]);
+        /* prettier-ignore */
+        expect(tree.deepKeys()).toStrictEqual([
+            "alpha", //19
+                "alpha/2", //28
+                    "alpha/2/2", //35
+                    "alpha/2/1", //36
+                "alpha/1", //29
+                    "alpha/1/3", //37
+                        "alpha/1/3/1", //48
+                    "alpha/1/2", //38
+                    "alpha/1/1", //39
+                        "alpha/1/1/1", //49
+        ]);
         const subtree = tree.truncate("alpha/1/3")!;
         expect(subtree).toBeDefined();
         expect(subtree).toStrictEqual({
             "alpha/1/3": 37,
-            "alpha/1/3/1": 49,
+            "alpha/1/3/1": 48,
         });
-        expect(tree.deepKeys()).toStrictEqual(["alpha", "alpha/2", "alpha/2/2", "alpha/2/1", "alpha/1", "alpha/1/2", "alpha/1/1", "alpha/1/1/1"]);
+        /* prettier-ignore */
+        expect(tree.deepKeys()).toStrictEqual([
+            "alpha", //19
+                "alpha/2", //28
+                    "alpha/2/2", //35
+                    "alpha/2/1", //36
+                "alpha/1", //29
+                    "alpha/1/2", //38
+                    "alpha/1/1", //39
+                        "alpha/1/1/1", //49
+        ]);
     });
 
     test("pluck (remove given node, leave children as new roots to their own subtrees)", () => {
@@ -459,7 +480,17 @@ describe("advanced CRUD operations", () => {
         const tree = makeTreeAlpha();
         const subtree = tree.prune("alpha/1/3")!;
         expect(subtree.deepKeys()).toStrictEqual(["alpha/1/3", "alpha/1/3/1"]);
-        expect(tree.deepKeys()).toStrictEqual(["alpha", "alpha/2", "alpha/2/2", "alpha/2/1", "alpha/1", "alpha/1/2", "alpha/1/1", "alpha/1/1/1"]);
+        /* prettier-ignore */
+        expect(tree.deepKeys()).toStrictEqual([
+            "alpha", //19
+                "alpha/2", //28
+                    "alpha/2/2", //35
+                    "alpha/2/1", //36
+                "alpha/1", //29
+                    "alpha/1/2", //38
+                    "alpha/1/1", //39
+                        "alpha/1/1/1", //49
+        ]);
     });
 
     test("splice (remove node, and reparent children to parent of removed node)", () => {
@@ -470,13 +501,13 @@ describe("advanced CRUD operations", () => {
         expect(tree.deepKeys()).toStrictEqual([
             "alpha", //19
                 "alpha/2", //28
-                    "alpha/2/2", //38
-                    "alpha/2/1", //39
+                    "alpha/2/2", //35
+                    "alpha/2/1", //36
                 "alpha/1", //29
                     "alpha/1/2", //38
                     "alpha/1/1", //39
                         "alpha/1/1/1", //49
-                    "alpha/1/3/1", //49
+                    "alpha/1/3/1", //48
         ]);
     });
 
@@ -489,8 +520,17 @@ describe("advanced CRUD operations", () => {
                 value: a.value * b.value,
             };
         });
-
-        expect(tree.deepKeys()).toStrictEqual(["alpha", "alpha/2", "alpha/2/2", "alpha/2/1", "alpha/1", "alpha/1/2", "alpha/1/3/alpha/1/3/1", "alpha/1/1/alpha/1/1/1"]);
+        /* prettier-ignore */
+        expect(tree.deepKeys()).toStrictEqual([
+            "alpha", //19
+                "alpha/2",  //28
+                    "alpha/2/2", //35
+                    "alpha/2/1", //36
+                "alpha/1", //29
+                    "alpha/1/2", //38
+                "alpha/1/3/alpha/1/3/1", //1776
+                "alpha/1/1/alpha/1/1/1", //1911
+        ]);
     });
 
     test("clear", () => {
@@ -512,7 +552,7 @@ describe("advanced CRUD operations", () => {
 
     test("subtrees", () => {
         const tree = makeTreeMulti();
-        const [alpha, beta] = tree.subtrees();
+        const [beta, alpha] = tree.subtrees();
 
         const alphaPrime = makeTreeAlpha();
         const betaPrime = makeTreeBeta();
@@ -550,15 +590,15 @@ describe("Traversal", () => {
         /* prettier-ignore */
         expect(tree.deepKeys()).toStrictEqual([
             "alpha", //19
-                "alpha/2", //28
-                    "alpha/2/2", //38
-                    "alpha/2/1", //39
-                "alpha/1", //29
-                    "alpha/1/3", //37
-                        "alpha/1/3/1", //49
-                    "alpha/1/2", //38
-                    "alpha/1/1", //39
-                        "alpha/1/1/1" //49
+            "alpha/2", //28
+                "alpha/2/2", //35
+                "alpha/2/1", //36
+            "alpha/1", //29
+                "alpha/1/3", //37
+                    "alpha/1/3/1", //48
+                "alpha/1/2", //38
+                "alpha/1/1", //39
+                    "alpha/1/1/1", //49
         ]);
     });
 
@@ -566,27 +606,53 @@ describe("Traversal", () => {
         const tree = makeTreeAlpha();
         /* prettier-ignore */
         expect(tree.wideKeys()).toStrictEqual([
+
             "alpha", //19
                 "alpha/2", //28
                 "alpha/1", //29
-                    "alpha/2/2", //38
-                    "alpha/2/1", //39
+                    "alpha/2/2", //35
+                    "alpha/2/1", //36
                     "alpha/1/3", //37
                     "alpha/1/2", //38
                     "alpha/1/1", //39
-                        "alpha/1/3/1", //49
+                        "alpha/1/3/1", //48
                         "alpha/1/1/1", //49
         ]);
     });
 
     test("deepUpwardKeys - depth-wise traversal from leaves", () => {
         const tree = makeTreeAlpha();
-        expect(tree.deepUpwardKeys()).toStrictEqual(["alpha/1/1/1", "alpha/1/1", "alpha/1", "alpha", "alpha/1/2", "alpha/1/3/1", "alpha/1/3", "alpha/2/1", "alpha/2", "alpha/2/2"]);
+        /* prettier-ignore */
+        expect(tree.deepUpwardKeys()).toStrictEqual([
+            "alpha/2/2", //35 -leaf
+            "alpha/2", //28
+            "alpha", //19
+            "alpha/2/1", //36 -leaf
+            "alpha/1/3/1", //48 -leaf
+            "alpha/1/3", //37
+            "alpha/1", //29
+            "alpha/1/2", //38 -leaf
+            "alpha/1/1/1", //49 -leaf
+            "alpha/1/1", //39
+
+        ]);
     });
 
     test("wideUpwardKeys - width-wise traversal from leaves", () => {
         const tree = makeTreeAlpha();
-        expect(tree.wideUpwardKeys()).toStrictEqual(["alpha/1/1/1", "alpha/1/2", "alpha/1/3/1", "alpha/2/1", "alpha/2/2", "alpha/1/1", "alpha/1", "alpha/1/3", "alpha/2", "alpha"]);
+        /* prettier-ignore */
+        expect(tree.wideUpwardKeys()).toStrictEqual([
+            "alpha/2/2", //35 -leaf
+            "alpha/2/1", //36 -leaf
+            "alpha/1/3/1", //48 -leaf
+            "alpha/1/2", //38 -leaf
+            "alpha/1/1/1", //49 -leaf            
+            "alpha/2", //28
+            "alpha/1/3", //37
+            "alpha/1", //29
+            "alpha/1/1", //39
+            "alpha", //19
+        ]);
     });
 
     describe("pathKeys", () => {
@@ -619,12 +685,19 @@ describe("Traversal", () => {
 
     test("rootKeys", () => {
         const tree = makeTreeMulti();
-        expect(tree.rootKeys()).toStrictEqual(["alpha", "beta"]);
+        expect(tree.rootKeys()).toStrictEqual(["beta", "alpha"]);
     });
 
     test("leafKeys", () => {
         const tree = makeTreeAlpha();
-        expect(tree.leafKeys()).toStrictEqual(["alpha/1/1/1", "alpha/1/2", "alpha/1/3/1", "alpha/2/1", "alpha/2/2"]);
+        /* prettier-ignore */
+        expect(tree.leafKeys()).toStrictEqual([
+            "alpha/2/2", //38
+            "alpha/2/1", //39
+                "alpha/1/3/1", //49
+            "alpha/1/2", //38
+                "alpha/1/1/1", //49
+        ]);
     });
 });
 

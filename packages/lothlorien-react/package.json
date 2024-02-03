@@ -1,6 +1,6 @@
 {
     "name": "@playableprints/lothlorien-react",
-    "version": "0.1.15",
+    "version": "0.2.0",
     "description": "",
     "private": false,
     "type": "module",
@@ -26,24 +26,24 @@
     },
     "homepage": "https://playableprints.github.io/lothlorien/index.html",
     "dependencies": {
-        "@playableprints/lothlorien": "^0.1.15",
-        "valtio": "^1.6.3"
+        "@playableprints/lothlorien": "workspace:^",
+        "valtio": "^1.13.0"
     },
     "peerDependencies": {
         "react": "^18.2.0"
     },
     "devDependencies": {
-        "@types/jest": "^29.5.10",
-        "@types/react": "^18.2.37",
-        "@typescript-eslint/eslint-plugin": "^6.10.0",
-        "@typescript-eslint/parser": "^6.10.0",
-        "eslint": "^8.53.0",
+        "@types/jest": "^29.5.12",
+        "@types/react": "^18.2.51",
+        "@typescript-eslint/eslint-plugin": "^6.20.0",
+        "@typescript-eslint/parser": "^6.20.0",
+        "eslint": "^8.56.0",
         "eslint-plugin-react-hooks": "^4.6.0",
-        "eslint-plugin-react-refresh": "^0.4.4",
+        "eslint-plugin-react-refresh": "^0.4.5",
         "jest": "^29.7.0",
         "react": "^18.2.0",
-        "ts-jest": "^29.1.1",
+        "ts-jest": "^29.1.2",
         "tsup": "^8.0.1",
-        "typescript": "^5.3.2"
+        "typescript": "^5.3.3"
     }
 }

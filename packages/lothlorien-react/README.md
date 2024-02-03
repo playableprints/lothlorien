@@ -2,7 +2,7 @@
 
 # Getting Started
 
-```ts
+```tsx
 import { Tree } from "@playableprints/lothlorien";
 import { TreeView, TreeNodeComponentProps, useTree, DepthMarker } from "@playableprints/lothlorien-react";
 
@@ -10,14 +10,15 @@ type MyPayload = {
     name: string;
 };
 
-const MyNodeRenderer = ({ nodeKey, treeRef, childNodes, value }: TreeNodeComponentProps<Tree<MyPayload>>) => {
+const MyNodeRenderer = ({ nodeKey, childKeys, value }: TreeNodeComponentProps<Tree<MyPayload>>) => {
+    const isLeaf = childKeys.length === 0;
+
     return (
         <>
             <div>
-                <DepthMarker tree={treeRef} nodeKey={nodeKey} />
+                <DepthMarker nodeKey={nodeKey} />
                 <span>{value.name}</span>
             </div>
-            {childNodes}
         </>
     );
 };
@@ -34,182 +35,52 @@ When you want to have nodes be collapsable or foldable, you can make use of your
 
 ## Basic Use
 
-Wrap the `<TreeView>` in a `<TreeFold>` and the node renderer can access it via the `useTreeFold` hook.
+from within your TreeNodeComponent, implement the `useFoldState` hook. That will let you control and check the current fold state of the node.
 
-```ts
+```tsx
 type Payload = {
     name: string;
 };
 
 const MyNodeRenderer: TreeNodeComponent<Tree<Payload>> = (props) => {
-    const { isOpen, toggle } = useTreeFold(props.nodeKey);
+    const { isOpen, toggle } = useFoldState(props.nodeKey);
     return (
         <>
             <div>
-                <button onClick={toggle}>&bull;</button>
+                <button onClick={toggle}>{isOpen ? "▼" : "▶"}</button>
                 {props.value.name}
             </div>
-            {isOpen ? props.childNodes : null}
         </>
     );
 };
+```
 
+you can also utilize the `useFoldControls` to control the fold state of the tree from the outside, usually by specifying the key.
+
+```tsx
 const App = () => {
     const tree = useTree<Payload>();
+    const controls = useFoldControls();
 
     return (
-        <TreeFold>
-            <TreeView value={tree} renderer={MyNodeRenderer} />
-        </TreeFold>
+        <div>
+            <button onClick={() => controls.current.unfoldTo("/some/nested/node")}>Unfold</button>
+            <TreeView value={tree} renderer={MyNodeRenderer} foldControls={controls} />
+        </div>
     );
 };
 ```
 
-## More Global-er State
+# from v0.1.0 to v0.2.0
 
-the `<TreeFold>` does not need to be the immediate ancestor of `<TreeView>`. In situations where you wish to preserve a tree's state between switching of contexts, a `<TreeFold>` can exist anywhere in the `<TreeView>`'s ancestry (As with any other react context, it will use the closest one if there are multiple in it's ancestry)
+## TreeNodeRenderer
 
-```ts
+TreeNodeRenderers are no longer responsible for rendering their own children. You don't need to (nor can you) render `childNodes` anymore. `childKeys` is now included as a prop to TreeNodeRenderer so that you can identify if the node is a leaf (by way of `childKeys.length`, for example).
 
-type Payload = {
-    name: string;
-};
+## FoldState
 
-const MyNodeRenderer: TreeNodeComponent<Tree<Payload>> = (props) => {
-    const { isOpen, toggle } = useTreeFold(props.nodeKey);
-    return (
-        <>
-            <div>
-                <button onClick={toggle}>&bull;</button>
-                {props.value.name}
-            </div>
-            {isOpen ? props.childNodes : null}
-        </>
-    );
-};
+The new fold state is outlined above, but tl;dr: you don't need a wrapping component anymore, the tree manages it's own fold state now. There is also now a new prop `onFold` that let's you perform actions when a given node folds or unfolds.
 
+## LazyTreeView
 
-const App = () => {
-    const tree = useTree<Payload>();
-
-    return (
-        <TreeFold>
-            <Router>
-                <Route>
-                    <TreeView value={tree} renderer={MyNodeRenderer} />
-                </Route>
-                <Route>
-                    {...}
-                </Route>
-        </TreeFold>
-    );
-};
-```
-
-## Prefixing
-
-It is possible to store multiple tree fold-states in one TreeFold by utilizing a `prefix`. This is useful when using TreeFold in a more global way.
-
-in the below example, by using the prefixes `first` and `second` the state of the two trees won't collide.
-
-```ts
-const MyNodeRenderer: TreeNodeComponent<Tree<Payload>> = (props) => {
-    const { isOpen, toggle } = useTreeFold(props.nodeKey, "first");
-    return (
-        <>
-            <div>
-                <button onClick={toggle}>&bull;</button>
-                {props.value.name}
-            </div>
-            {isOpen ? props.childNodes : null}
-        </>
-    );
-};
-
-const MyOtherNode: TreeNodeComponent<Tree<Payload>> = (props) => {
-    const { isOpen, toggle } = useTreeFold(props.nodeKey, "second");
-    return (
-        <>
-            <div>
-                <button onClick={toggle}>&bull;</button>
-                {props.value.name}
-            </div>
-            {isOpen ? props.childNodes : null}
-        </>
-    );
-};
-
-const App = () => {
-    const firstTree = useTree<Payload>();
-    const secondTree = useTree<Payload>();
-    return (
-        <TreeFold>
-            <TreeView value={firstTree} renderer={FirstNodeRenderer} />
-            <TreeView value={secondTree} renderer={SecondNodeRenderer} />
-        </TreeFold>
-    );
-};
-```
-
-## Imperative Handle and Folder State Hygene
-
-the `<TreeFold>` does come with an imperative handle hook, which will let you both keep current fold state, but keep the internal state clean when the shape of a tree changes.
-calling `foldControls.current.sync` in this way will keep any existing fold state as is, initialize any new keys, and discard any that is no longer present as a result of the tree being repopulated.
-
-```ts
-const App = () => {
-    const [source, setSource] = useState<string[]>([]);
-    const tree = useTree<Payload>();
-    const foldControls = useRef<TreeFoldControls>(null);
-
-    // re-populate tree when source is changed
-    useEffect(() => {
-        tree.clear();
-        tree.populate(source, () => {});
-
-        // update fold controls will keep current fold state for keys that still exist, initialize new keys, and remove any now-unused keys.
-        // the prefix let's you target a specific fold-state collection, but is optional if you're only handling one tree's state.
-        foldControls.current?.sync(tree.current, "myPrefix");
-    }, [source, foldControls, tree]);
-
-    return (
-        <TreeFold ref={foldControls}>
-            <TreeView value={tree} renderer={MyNodeRenderer} />
-        </TreeFold>
-    );
-};
-```
-
-You can also utilize the foldControls to toggle or set individual fold states from the outside using `foldControls.current.toggle` and `foldControls.current.set`
-
-# nodeProps
-
-You can supply a second type arg to `<TreeView>` to gain access to the `nodeProps` prop. Contents of `nodeProp` will be passed to all nodes of the tree.
-this is especially useful for Filtering: pass a filter state in via some state and the NodeRenderer will pick it up.
-
-```ts
-
-type Payload = {
-    name: string;
-}
-
-type Extra = {
-    filter: string;
-}
-
-const MyNodeRenderer: TreeNodeComponent<Tree<Payload>, Extra> = ({ filter, value, ...typicalProps}) => {
-    // if filter is empty or filter ane name match, render this node, otherwise don't;
-    return filter === "" || value.name.startsWith(filter) ? <div>{value.name}</div> : null;
-}
-
-const App = () => {
-    const tree = useTree<Payload>();
-
-    const [filter, setFilter] = useState<string>("");
-
-    return (
-        <input value={filter} onChange={(e) => { setFilter(e.currentTarget)}} />
-        <TreeView<Tree<Payload>, Extra> value={tree} renderer={MyNodeRenderer} nodeProps={{ filter }} />
-    );
-};
-```
+A variant of the already-extant `<TreeView/>`, the Lazy Tree View will render placeholders for off-screen nodes and replace them with the rendered node when it comes on screen.
