@@ -152,9 +152,11 @@ export const MetaProvider = ({ children, tree, startClosed = false, controls, on
 
     const treeRef = useRef<Tree<any>>(tree);
     useEffect(() => {
+        console.log("tree did update in Meta");
         treeRef.current = tree;
         markerValueRef.current = rebuildMarkers(tree);
         markerSubs.current.forEach((cb) => cb());
+        foldSubs.current.forEach((cb) => cb());
     }, [tree]);
 
     const foldValueRef = useRef<{ [key: string]: boolean }>({});
@@ -185,12 +187,17 @@ export const MetaProvider = ({ children, tree, startClosed = false, controls, on
                 },
                 query: (nK: string) => {
                     //am I visible?
+                    const p = treeRef.current.parentKey(nK);
+                    if (p === undefined) {
+                        return false;
+                    }
+                    if (p === null) {
+                        return true;
+                    }
                     return !treeRef.current
                         .ancestorKeys(nK)
                         .reverse()
-                        .some((aKey, i, ary) => {
-                            return !(foldValueRef.current[aKey] ?? (i === ary.length - 1 ? false : defaultFoldRef.current));
-                        });
+                        .some((each) => !(foldValueRef.current[each] ?? defaultFoldRef.current));
                 },
                 get: (nK: string) => {
                     return foldValueRef.current[nK] ?? defaultFoldRef.current;
