@@ -152,7 +152,6 @@ export const MetaProvider = ({ children, tree, startClosed = false, controls, on
 
     const treeRef = useRef<Tree<any>>(tree);
     useEffect(() => {
-        console.log("tree did update in Meta");
         treeRef.current = tree;
         markerValueRef.current = rebuildMarkers(tree);
         markerSubs.current.forEach((cb) => cb());
