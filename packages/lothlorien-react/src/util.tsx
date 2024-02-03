@@ -17,6 +17,8 @@ export type OnFoldHandler = (changed: { [key: string]: boolean }) => void;
  * @prop nodeKey - the key of the node being rendered
  * @prop value - the value of this node of the tree
  * @prop childKeys - a list of child nodes. Useful to know if this is a leaf node or not.
+ * @prop parentKey - the key of this node's parent, or null if it is a root
+ * @prop treeRef - a reference to the tree object. Note that this should not be relied upon for reactive updates directly, but rather to access it's methods.
  * @interface
  * @group Component Props
  */
@@ -24,6 +26,8 @@ export type TreeNodeComponentProps<T extends Tree<any>> = {
     value: PayloadOf<T>;
     nodeKey: string;
     childKeys: readonly string[];
+    parentKey: string | null;
+    treeRef: MutableRefObject<T>;
 };
 
 /**
@@ -420,6 +424,6 @@ export const UnderFold = ({ children, nodeKey }: { children?: ReactNode; nodeKey
 };
 
 export const NodeWrapper = <T extends Tree<any>>({ nodeKey, treeRef, renderer: Renderer }: { nodeKey: string; treeRef: MutableRefObject<T>; renderer: TreeNodeComponent<T> }) => {
-    const { value, children } = useSnapshot(treeRef.current.entry(nodeKey)!);
-    return <Renderer value={value} childKeys={children} nodeKey={nodeKey} />;
+    const { parent, value, children } = useSnapshot(treeRef.current.entry(nodeKey)!);
+    return <Renderer value={value} childKeys={children} nodeKey={nodeKey} treeRef={treeRef} parentKey={parent} />;
 };
