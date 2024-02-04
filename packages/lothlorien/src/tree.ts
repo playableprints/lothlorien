@@ -619,6 +619,59 @@ export class Tree<T> {
         this._store = current;
     }
 
+    /**
+     * Given a list of nodes, allocate them into the forest, but asynchronously
+     * @param {Iterable<F>} list
+     * @param {(data: F) => Promise<IterableOr<{ key: string; value: T; parent: string | null }> | void>} allocator
+     * @group Modify
+     */
+    async populateAsync<F>(list: Iterable<F>, allocator: (data: F) => Promise<IterableOr<Allocation<T>> | void>): Promise<void> {
+        const hold: {
+            [key: string]: Allocation<T>;
+        } = {};
+
+        // Convert the input data entries into nodes and store them in the 'hold' object
+        for (const entry of list) {
+            const each = await allocator(entry);
+            if (each) {
+                for (const n of Symbol.iterator in each ? each : [each]) {
+                    hold[n.key] = n;
+                }
+            }
+        }
+
+        let current = { ...this._store };
+
+        const doAllocation = async (k: string) => {
+            if (k in current) {
+                return;
+            }
+            if (!hold[k]) {
+                // missing from allocation
+                throw Err.UNALLOCATED(k);
+            }
+            const { parent, value } = hold[k];
+            if (parent !== null && !(parent in current)) {
+                await doAllocation(parent);
+            }
+            current[k] = {
+                key: k,
+                parent,
+                children: [],
+                value,
+            };
+            if (parent !== null) {
+                current[parent] = {
+                    ...current[parent],
+                    children: [...current[parent].children, k],
+                };
+            }
+        };
+
+        await Promise.all(Object.keys(hold).map(doAllocation));
+        this._store = current;
+    }
+
     /* Hierarchy */
 
     /**

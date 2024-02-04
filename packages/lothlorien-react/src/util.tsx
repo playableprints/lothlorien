@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Comparator, SortedTree, Tree } from "@playableprints/lothlorien";
-import { createContext, ReactNode, RefObject, useRef, useEffect, useMemo, useImperativeHandle, useContext, useSyncExternalStore, useCallback, ComponentType, useState, MutableRefObject } from "react";
+import { createContext, ReactNode, RefObject, useRef, useEffect, useMemo, useImperativeHandle, useContext, useSyncExternalStore, useCallback, ComponentType, useState, MutableRefObject, memo } from "react";
 import { proxy, useSnapshot } from "valtio";
+
+export const genericMemo: <T>(component: T) => T = memo;
 
 /**
  * @argument changed {[key: string]: boolean} - a key-value mapping of node fold states that have changed and the state they have changed to.
@@ -424,10 +426,10 @@ export const OnScreen = ({
     return isVisible ? children : <Placeholder ref={intersectionRef} data-key={id} style={{ height: placeholderHeight.current }} />;
 };
 
-export const UnderFold = ({ children, nodeKey }: { children?: ReactNode; nodeKey: string }) => {
+export const UnderFold = memo(({ children, nodeKey }: { children?: ReactNode; nodeKey: string }) => {
     const shouldIRender = useVisibility(nodeKey);
     return shouldIRender ? children : null;
-};
+});
 
 export const NodeWrapper = <T extends Tree<any>>({ nodeKey, treeRef, renderer: Renderer }: { nodeKey: string; treeRef: MutableRefObject<T>; renderer: TreeNodeComponent<T> }) => {
     const { parent, value, children } = useSnapshot(treeRef.current.entry(nodeKey)!);

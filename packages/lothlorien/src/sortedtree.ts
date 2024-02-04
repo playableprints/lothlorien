@@ -334,6 +334,15 @@ export class SortedTree<T> extends Tree<T> {
     /**
      * @group Modify
      */
+    override async populateAsync<F>(list: Iterable<F>, allocator: (data: F) => Promise<void | IterableOr<{ key: string; value: T; parent: string | null }>>): Promise<void> {
+        await super.populateAsync(list, allocator);
+        this._keys = Object.keys(this._store);
+        this.sort();
+    }
+
+    /**
+     * @group Modify
+     */
 
     // overriding this because I don't want to sort *everything* on every insertion when I can just sort a specific subset after insertion.
     override add(key: string, parent: string | null, value: T): void {

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Tree } from "@playableprints/lothlorien";
-import { MutableRefObject, RefObject } from "react";
+import { MutableRefObject, RefObject, useMemo } from "react";
 import { useSnapshot } from "valtio";
-import { MetaProvider, NodeWrapper, OnFoldHandler, TreeFoldControls, TreeNodeComponent, UnderFold } from "./util";
+import { MetaProvider, NodeWrapper, OnFoldHandler, TreeFoldControls, TreeNodeComponent, UnderFold, genericMemo } from "./util";
 
 /**
  * @template T - the type of tree that the component prop will be rendering
@@ -25,6 +25,7 @@ export type TreeViewProps<T extends Tree<any>> = {
 
 /**
  * Renders a given tree with each node being rendered by the included renderer component prop.
+ * TreeView is memoized using React.memo
  *
  * @group Components
  *
@@ -46,11 +47,16 @@ export type TreeViewProps<T extends Tree<any>> = {
  *
  */
 
-export const TreeView = <T extends Tree<any>>(props: TreeViewProps<T>) => {
+export const TreeView = genericMemo(<T extends Tree<any>>(props: TreeViewProps<T>) => {
     const snapshot = useSnapshot(props.value.current);
+
+    const keys = useMemo(() => {
+        return snapshot.deepKeys();
+    }, [snapshot]);
+
     return (
         <MetaProvider tree={snapshot as T} controls={props.foldControls} startClosed={props.startClosed ?? false} onFold={props.onFold}>
-            {snapshot.deepKeys().map((k) => {
+            {keys.map((k) => {
                 return (
                     <UnderFold nodeKey={k} key={k}>
                         <NodeWrapper nodeKey={k} renderer={props.renderer} treeRef={props.value} />
@@ -59,4 +65,4 @@ export const TreeView = <T extends Tree<any>>(props: TreeViewProps<T>) => {
             })}
         </MetaProvider>
     );
-};
+});

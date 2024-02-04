@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Tree } from "@playableprints/lothlorien";
-import { MutableRefObject, RefObject, ComponentType } from "react";
-import { MetaProvider, NodeWrapper, OnFoldHandler, OnScreen, TreeFoldControls, TreeNodeComponent, UnderFold } from "./util";
+import { MutableRefObject, RefObject, ComponentType, useMemo } from "react";
+import { MetaProvider, NodeWrapper, OnFoldHandler, OnScreen, TreeFoldControls, TreeNodeComponent, UnderFold, genericMemo } from "./util";
 import { useSnapshot } from "valtio";
 
 /**
@@ -32,6 +32,7 @@ export type LazyTreeViewProps<T extends Tree<any>> = {
 /**
  * Renders a given tree with each node being rendered by the included renderer component prop.
  * Off-screen nodes will be rendered as placeholders and swapped out for actual nodes when they appear on screen.
+ * LazyTreeView is memoized using React.memo
  *
  * @group Components
  *
@@ -53,11 +54,16 @@ export type LazyTreeViewProps<T extends Tree<any>> = {
  *
  */
 
-export const LazyTreeView = <T extends Tree<any>>(props: LazyTreeViewProps<T>) => {
+export const LazyTreeView = genericMemo(<T extends Tree<any>>(props: LazyTreeViewProps<T>) => {
     const snapshot = useSnapshot(props.value.current);
+
+    const keys = useMemo(() => {
+        return snapshot.deepKeys();
+    }, [snapshot]);
+
     return (
         <MetaProvider tree={snapshot as T} controls={props.foldControls} startClosed={props.startClosed ?? false} onFold={props.onFold}>
-            {snapshot.deepKeys().map((k) => {
+            {keys.map((k) => {
                 return (
                     <UnderFold nodeKey={k} key={k}>
                         <OnScreen placeholder={props.placeholder} height={props.placeholderHeight}>
@@ -68,4 +74,4 @@ export const LazyTreeView = <T extends Tree<any>>(props: LazyTreeViewProps<T>) =
             })}
         </MetaProvider>
     );
-};
+});
