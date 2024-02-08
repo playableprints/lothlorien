@@ -6,7 +6,7 @@ import { useMarkers } from "./util";
 // defaults are ascii art, becuase it's wonderful :3
 const DEFAULT_PIPE = <span className={"pipe"}>{"│"}</span>;
 const DEFAULT_TEE = <span className={"tee"}>{"├"}</span>;
-const DEFAULT_ELBOW = <span className={"elbow"}>{"╰"}</span>;
+const DEFAULT_ELBOW = <span className={"elbow"}>{"└"}</span>;
 const DEFAULT_SPACER = <span className={"spacer"}> </span>;
 
 /**
@@ -42,18 +42,18 @@ export type DepthMarkerProps = { nodeKey: string; spacer?: ReactNode; pipe?: Rea
  * Renders the depth marker for a given tree node
  * for example:
  * ```
- * ╰/root
+ * └/root
  *  ├/root/alpha
- *  │╰/root/alpha/1
- *  │ ╰/root/alpha/1/a
- *  ╰/root/beta
- *   ╰/root/beta/1
+ *  │└/root/alpha/1
+ *  │ └/root/alpha/1/a
+ *  └/root/beta
+ *   └/root/beta/1
  * ```
  * setting the "pipe", "elbow", "spacer", and "tee" props alters how the hierarchical shapes are rendered. By default they use the ascii box-drawing characters.
  * - pipe: ``│``
  * - spacer: `` ``
  * - tee: ``├``
- * - elbow: ``╰``
+ * - elbow: ``└``
  *
  * @group Components
  */
@@ -63,23 +63,20 @@ export const DepthMarker = (props: DepthMarkerProps & HTMLAttributes<HTMLSpanEle
     const markers = useMarkers(nodeKey);
 
     const renderedMarkers = useMemo(() => {
-        return markers
-            .slice(skipFirst ? 1 : 0)
-            .split("")
-            .map((marker, i) => {
-                switch (marker) {
-                    case "│":
-                        return <Fragment key={i}>{pipe}</Fragment>;
-                    case "╰":
-                        return <Fragment key={i}>{elbow}</Fragment>;
-                    case " ":
-                        return <Fragment key={i}>{spacer}</Fragment>;
-                    case "├":
-                        return <Fragment key={i}>{tee}</Fragment>;
-                    default:
-                        return null;
-                }
-            });
+        return markers.slice(skipFirst ? 1 : 0).map((marker, i) => {
+            switch (marker) {
+                case "│":
+                    return <Fragment key={i}>{pipe}</Fragment>;
+                case "└":
+                    return <Fragment key={i}>{elbow}</Fragment>;
+                case " ":
+                    return <Fragment key={i}>{spacer}</Fragment>;
+                case "├":
+                    return <Fragment key={i}>{tee}</Fragment>;
+                default:
+                    return null;
+            }
+        });
     }, [markers, skipFirst, spacer, tee, pipe, elbow]);
 
     return (

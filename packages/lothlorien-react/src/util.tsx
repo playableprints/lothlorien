@@ -295,17 +295,25 @@ const rebuildMarkers = (tree: Tree<unknown>): { [key: string]: string } => {
     return tree.reduceWide<{ [key: string]: string }>((value, key, i, acc) => {
         const p = tree.parentKey(key)!;
         if (p === null) {
-            acc[key] = roots[roots.length - 1] === key ? "╰" : "├";
+            acc[key] = roots[roots.length - 1] === key ? "└" : "├";
             return acc;
         }
         const siblings = tree.childrenKeys(p);
         const pMarkers = acc[p];
-        acc[key] = `${pMarkers.slice(0, -1)}${pMarkers.endsWith("├") ? "│" : " "}${siblings[siblings.length - 1] === key ? "╰" : "├"}`;
+        acc[key] = `${pMarkers.slice(0, -1)}${pMarkers.endsWith("├") ? "│" : " "}${siblings[siblings.length - 1] === key ? "└" : "├"}`;
         return acc;
     }, {});
 };
 
 /* Hooks */
+
+/**
+ * The various markers used by useMarker and DepthMarker
+ *
+ * @group Types
+ */
+
+export type Marker = "├" | "│" | " " | "└";
 
 /**
  *
@@ -341,13 +349,25 @@ export const useVisibility = (nodeKey: string) => {
     //return useContext(CTX).visibility.get(nodeKey);
 };
 
+/**
+ * Returns an array of Depth Markers ("├" | "│" | " " | "└") that indicates the depth of the current node.
+ * @param nodeKey the nodeKey to get the current marker set from
+ * @returns { Marker[] } an array of markers that represents the depth of this node.
+ *
+ * @group Hooks
+ */
+
 export const useMarkers = (nodeKey: string) => {
     const ctx = useContext(CTX)?.markers;
     if (!ctx) {
         throw "DepthMarker can only be used within a TreeNodeRenderer";
     }
     const { get, sub } = ctx;
-    return useSyncExternalStore(sub, () => get(nodeKey));
+    const str = useSyncExternalStore(sub, () => get(nodeKey));
+
+    return useMemo(() => {
+        return str.split("") as Marker[];
+    }, [str]);
 };
 
 /**

@@ -1,6 +1,6 @@
 {
     "name": "@playableprints/lothlorien-react",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "description": "",
     "private": false,
     "type": "module",
@@ -26,7 +26,7 @@
     },
     "homepage": "https://playableprints.github.io/lothlorien/index.html",
     "dependencies": {
-        "@playableprints/lothlorien": "^0.2.4"
+        "@playableprints/lothlorien": "^0.2.5"
     },
     "peerDependencies": {
         "valtio": "^1.13.0",
