@@ -6,8 +6,6 @@ const natsort = new Intl.Collator(undefined, {
     sensitivity: "base",
 }).compare;
 
-const DEFAULT_COMPARATOR = ([aKey]: [string, unknown], [bKey]: [string, unknown]) => natsort(aKey, bKey);
-
 export class SortedTree<T> extends Tree<T> {
     protected _keys: string[];
     protected _comparator: Comparator<[string, T]>;
@@ -15,7 +13,24 @@ export class SortedTree<T> extends Tree<T> {
     constructor(defaultComparator?: Comparator<[string, T]>) {
         super();
         this._keys = [];
-        this._comparator = defaultComparator ?? DEFAULT_COMPARATOR;
+        this._comparator = defaultComparator ?? SortedTree.DEFAULT_COMPARATOR;
+    }
+
+    static DEFAULT_COMPARATOR = ([aKey]: [string, unknown], [bKey]: [string, unknown]) => natsort(aKey, bKey);
+
+    /**
+     * Creates a new tree from a raw store. This does not do any validation checks for completeness.
+     * @param { {[key: string]: TreeEntry<T>} } contents the raw store to use as a tree
+     * @returns {Tree<T>}
+     * @group Utility
+     */
+
+    static from<T>(contents: { [key: string]: TreeEntry<T> }, comparator?: Comparator<[string, T]>): SortedTree<T> {
+        const t = new SortedTree<T>(comparator);
+        t._keys = Object.keys(contents);
+        t._store = contents;
+        t.sort();
+        return t;
     }
 
     /**
@@ -27,6 +42,15 @@ export class SortedTree<T> extends Tree<T> {
     siblingIndexOf(key: string): number {
         const siblings = this.siblingKeys(key);
         return siblings.indexOf(key);
+    }
+
+    /**
+     * Gives access to the sorted Tree keys directly for reference reasons; Warning: cannot be modified, lest something get messed up with three internal state.
+     * @returns {Readonly string[]} the tree keys, in order
+     * @group Query
+     */
+    keys(): readonly string[] {
+        return this._keys;
     }
 
     /**

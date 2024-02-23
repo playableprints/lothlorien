@@ -10,6 +10,19 @@ export class Tree<T> {
         this._store = {};
     }
 
+    /**
+     * Creates a new tree from a raw store. This does not do any validation checks for completeness.
+     * @param { {[key: string]: TreeEntry<T>} } contents the raw store to use as a tree
+     * @returns {Tree<T>}
+     * @group Utility
+     */
+
+    static from<T>(contents: { [key: string]: TreeEntry<T> }): Tree<T> {
+        const t = new Tree<T>();
+        t._store = contents;
+        return t;
+    }
+
     /* Basics */
 
     /**
@@ -100,11 +113,20 @@ export class Tree<T> {
     /**
      * Gives access to the Tree Entry directly for reference reasons; Warning: cannot be modified, lest something get messed up with three internal state.
      * @param {string} key The key of the node to get the entry of.
-     * @returns {Readonly TreeEntr<T> | undefined} the tree entry
+     * @returns {Readonly TreeEntry<T> | undefined} the tree entry
      * @group Query
      */
     entry(key: string): ReadonlyTreeEntry<T> | undefined {
         return this._store[key];
+    }
+
+    /**
+     * Gives access to the Tree store directly for reference reasons; Warning: cannot be modified, lest something get messed up with three internal state.
+     * @returns {Readonly {[key: string]: Readonly TreeEntry<T>}} the tree store
+     * @group Query
+     */
+    contents(): { readonly [key: string]: ReadonlyTreeEntry<T> } {
+        return this._store;
     }
 
     /**
