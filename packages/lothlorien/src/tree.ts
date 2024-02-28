@@ -1,6 +1,41 @@
 import { Err } from "./errors";
 import { IterableOr, Discriminator, Updater, KeyedReducer, TreeEntry, KeyedMapper, Allocation, ReadonlyTreeEntry } from "./types";
 
+/*
+    nKeys,
+    nValues,
+        SOMETHINGs(key: string): T[] { return this.SOMETHINGValues(key); }
+        SOMETHINGValues(key: string): T[] {
+            return this.SOMETHINGKeys(key).map((k) => this._store[k].value);
+        }
+        SOMETHINGTuples(key: string): [string, T][] {
+            return this.SOMETHINGKeys(key).map((k) => [k, this._store[k].value])
+        }
+        SOMETHINGCollection(key: string): { [key: string]: T } {
+            return this.SOMETHINGKeys(key).reduce<{ [key: string]: T }>((acc, k) => {
+                acc[k] = this._store[k].value;
+                return acc;
+            }, {})
+        }
+        SOMETHINGPairs(key: string): {key: string, value: T}[] {
+            return this.SOMETHINGKeys(key).map((key) => ({
+                key,
+                value: this._store[key].value,
+            }));
+        }
+        reduceSOMETHING<R = void>(reducer: KeyedReducer<T, string, R>, start: R, key: string): R {
+            return this.SOMETHINGKeys(key).reduce((acc, key, i) => {
+                return reducer(this._store[key].value, key, i, acc);
+            }, start)
+        }
+        mapSOMETHING<R>(mapper: KeyedMapper<T, string, R>, key: string): R[] {
+            return this.SOMETHINGKeys(key).map<R>((key, i) => {
+                return mapper(this._store[key].value, key, i);
+            })
+        }
+    
+*/
+
 export class Tree<T> {
     protected _store: {
         [key: string]: TreeEntry<T>;
@@ -700,7 +735,7 @@ export class Tree<T> {
      * Get the root key of the subtree that this key is in.
      * @param {string} key The key to check.
      * @returns {string} The root key in question.
-     * @group Hierarchy
+     * @group Hierarchy / Root
      */
     rootKeyOf(key: string): string | undefined {
         if (this.has(key)) {
@@ -721,7 +756,7 @@ export class Tree<T> {
      * Returns the key of the parent node of the node with the given key.
      * @param {string} key The key of the node for which to find the parent.
      * @returns {string | null | undefined} The key of the parent node as a string, or null if the node has no parent, or undefined if the node was not in the key
-     * @group Hierarchy
+     * @group Hierarchy / Parent
      */
     parentKey(key: string): string | null | undefined {
         if (this.has(key)) {
@@ -731,11 +766,23 @@ export class Tree<T> {
 
     /**
      * Returns the value of the parent node of the node with the given key.
+     * @alias parentValue
      * @param {string} key The key of the node for which to find the parent.
      * @returns {T | undefined} The value of the parent node, or undefined if the node has no parent or the key does not exist.
-     * @group Hierarchy
+     * @group Hierarchy / Parent
      */
+
     parent(key: string): T | undefined {
+        return this.parentValue(key);
+    }
+
+    /**
+     * Returns the value of the parent node of the node with the given key.
+     * @param {string} key The key of the node for which to find the parent.
+     * @returns {T | undefined} The value of the parent node, or undefined if the node has no parent or the key does not exist.
+     * @group Hierarchy / Parent
+     */
+    parentValue(key: string): T | undefined {
         if (this.has(key)) {
             const pid = this.parentKey(key)!;
             if (pid !== null) {
@@ -745,10 +792,30 @@ export class Tree<T> {
     }
 
     /**
-     * Returns an array of keys representing the ancestor nodes of the node with the given key.
+     * Returns a tuples representing this nodes parent key and value.
+     * @param {string} key The key of the node for which to find the parent.
+     * @returns {[string | undefined | null, T | undefined]} A tuple consistent of the parent key and value, if applicable.
+     * @group Hierarchy / Parent
+     */
+    parentTuple(key: string): [string | undefined | null, T | undefined] {
+        return [this.parentKey(key), this.parentValue(key)];
+    }
+
+    /**
+     * Returns an objects representing the pareent key and node of the given node.
+     * @param {string} key The key of the node for which to find the parent.
+     * @returns {{ key: string | undefined | null, value: T | undefined}} An object representing the parent node.
+     * @group Hierarchy / Parent
+     */
+    parentPair(key: string): { key: string | undefined | null; value: T | undefined } {
+        return { key: this.parentKey(key), value: this.parentValue(key) };
+    }
+
+    /**
+     * Returns an array of keys representing the ancestor nodes of the node with the given key, from closest to root.
      * @param {string} key The key of the node for which to find the ancestors.
      * @returns {string[]} An array of keys representing the ancestor nodes.
-     * @group Hierarchy
+     * @group Hierarchy / Ancestors
      */
     ancestorKeys(key: string): string[] {
         const t = this._store[key];
@@ -761,20 +828,143 @@ export class Tree<T> {
     }
 
     /**
-     * Returns an array of values representing the ancestor nodes of the node with the given key.
+     * Returns an array of values representing the ancestor nodes of the node with the given key, from closest to root.
+     * @alias ancestorValues
      * @param {string} key The key of the node for which to find the ancestors.
      * @returns {T[]} An array of values representing the ancestor nodes.
-     * @group Hierarchy
+     * @group Hierarchy / Ancestors
      */
     ancestors(key: string): T[] {
+        return this.ancestorValues(key);
+    }
+
+    /**
+     * Returns an array of values representing the ancestor nodes of the node with the given key, from closest to root.
+     * @param {string} key The key of the node for which to find the ancestors.
+     * @returns {T[]} An array of values representing the ancestor nodes.
+     * @group Hierarchy / Ancestors
+     */
+    ancestorValues(key: string): T[] {
         return this.ancestorKeys(key).map((k) => this._store[k].value);
+    }
+
+    /**
+     * Returns an array of tuples representing the ancestor keys and nodes of the node with the given key, from closest to root.
+     * @param {string} key The key of the node for which to find the ancestors.
+     * @returns {[string, T][]} An array of values representing the ancestor nodes.
+     * @group Hierarchy / Ancestors
+     */
+    ancestorTuples(key: string): [string, T][] {
+        return this.ancestorKeys(key).map((k) => [k, this._store[k].value]);
+    }
+
+    /**
+     * Returns an object representing the ancestors nodes of the given node, with keys as node keys and values as node values, from closest to root.
+     * @param {string} key The key of the node for which to find the ancestors.
+     * @returns {{[key: string]: T}} An array of values representing the ancestor nodes.
+     * @group Hierarchy / Ancestors
+     */
+    ancestorCollection(key: string): { [key: string]: T } {
+        return this.ancestorKeys(key).reduce<{ [key: string]: T }>((acc, k) => {
+            acc[k] = this._store[k].value;
+            return acc;
+        }, {});
+    }
+
+    /**
+     * Returns an array of objects representing the ancestor keys and nodes of the node with the given key, from closest to root.
+     * @param {string} key The key of the node for which to find the ancestors.
+     * @returns {{ key: string, value: T}[]} An array of values representing the ancestor nodes.
+     * @group Hierarchy / Ancestors
+     */
+    ancestorPairs(key: string): { key: string; value: T }[] {
+        return this.ancestorKeys(key).map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
+    }
+
+    /**
+     * Applies a reducer function to each ancestors in the tree from the given node, from closest to root
+     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
+     * - `key` (string): The key of the current node being processed.
+     * - `value` (type `T`): The value associated with the current node being processed.
+     * - `i` (number): The index of the current node in the ancestor list traversal.
+     * - `accumulation` (type `R`): The accumulated result from previous reductions.
+     * @param {R} start The initial value of the accumulator for the reduction.
+     * @param {string} key the node from which to traverse upward from
+     * @returns {R} The final accumulated result after applying the reducer to all nodes.
+     * @group Hierarchy / Ancestors
+     */
+    reduceAncestors<R = void>(reducer: KeyedReducer<T, string, R>, start: R, key: string): R {
+        return this.ancestorKeys(key).reduce((acc, key, i) => {
+            return reducer(this._store[key].value, key, i, acc);
+        }, start);
+    }
+
+    /**
+     * Applies a reducer function to each ancestors in the tree from the given node, from root to closest
+     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
+     * - `key` (string): The key of the current node being processed.
+     * - `value` (type `T`): The value associated with the current node being processed.
+     * - `i` (number): The index of the current node in the ancestor list traversal.
+     * - `accumulation` (type `R`): The accumulated result from previous reductions.
+     * @param {R} start The initial value of the accumulator for the reduction.
+     * @param {string} key the node from which to traverse upward from
+     * @returns {R} The final accumulated result after applying the reducer to all nodes.
+     * @group Hierarchy / Ancestors
+     */
+    reduceAncestorsDownwards<R = void>(reducer: KeyedReducer<T, string, R>, start: R, key: string): R {
+        return this.ancestorKeys(key)
+            .reverse()
+            .reduce((acc, key, i) => {
+                return reducer(this._store[key].value, key, i, acc);
+            }, start);
+    }
+
+    /**
+     * Maps a function to each ancestors of the target node, from closest to root.
+     *
+     * @template R - The type of the result.
+     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
+     *   - `value` (type `T`): The value associated with the current node being processed.
+     *   - `key` (string): The key of the current node being processed.
+     *   - `i` (number): The index of the current node in the ancestor line.
+     * @param {string} key the node from which to iterate the descendents from
+     * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
+     * @group Hierarchy / Ancestors
+     */
+    mapAncestors<R>(mapper: KeyedMapper<T, string, R>, key: string): R[] {
+        return this.ancestorKeys(key).map<R>((key, i) => {
+            return mapper(this._store[key].value, key, i);
+        });
+    }
+
+    /**
+     * Maps a function to each ancestors of the target node, from root to closest.
+     *
+     * @template R - The type of the result.
+     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
+     *   - `value` (type `T`): The value associated with the current node being processed.
+     *   - `key` (string): The key of the current node being processed.
+     *   - `i` (number): The index of the current node in the ancestor line.
+     * @param {string} key the node from which to iterate the descendents from
+     * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
+     * @group Hierarchy / Ancestors
+     */
+    mapAncestorsDownwards<R>(mapper: KeyedMapper<T, string, R>, key: string): R[] {
+        return this.ancestorKeys(key)
+            .reverse()
+            .map<R>((key, i) => {
+                return mapper(this._store[key].value, key, i);
+            });
     }
 
     /**
      * Returns an array of keys representing the child nodes of the node with the given key.
      * @param {string} key The key of the node for which to find the children.
      * @returns {string[]} An array of keys representing the child nodes.
-     * @group Hierarchy
+     * @group Hierarchy / Children
      */
     childrenKeys(key: string): string[] {
         return [...(this._store[key]?.children ?? [])];
@@ -782,19 +972,102 @@ export class Tree<T> {
 
     /**
      * Returns an array of values representing the child nodes of the node with the given key.
+     * @alias childrenValues
      * @param {string} key The key of the node for which to find the children.
      * @returns {T[]} An array of values representing the child nodes.
-     * @group Hierarchy
+     * @group Hierarchy / Children
      */
     children(key: string): T[] {
-        return (this._store[key]?.children ?? []).map((k) => this._store[k].value);
+        return this.childrenValues(key);
+    }
+
+    /**
+     * Returns an array of values representing the child nodes of the node with the given key.
+     * @param {string} key The key of the node for which to find the children.
+     * @returns {T[]} An array of values representing the child nodes.
+     * @group Hierarchy / Children
+     */
+    childrenValues(key: string): T[] {
+        return this.childrenKeys(key).map((k) => this._store[k].value);
+    }
+
+    /**
+     * Returns an array of tuples representing the children keys of the given node
+     * @param {string} key The key of the node for which to find the children.
+     * @returns {[string, T][]} An array of values representing the children nodes.
+     * @group Hierarchy / Children
+     */
+    childrenTuples(key: string): [string, T][] {
+        return this.childrenKeys(key).map((k) => [k, this._store[k].value]);
+    }
+
+    /**
+     * Returns an object representing the children nodes of the given node, with keys as node keys and values as node values.
+     * @param {string} key The key of the node for which to find the children.
+     * @returns {{[key: string]: T}} An array of values representing the child nodes.
+     * @group Hierarchy / Children
+     */
+    childrenCollection(key: string): { [key: string]: T } {
+        return this.childrenKeys(key).reduce<{ [key: string]: T }>((acc, k) => {
+            acc[k] = this._store[k].value;
+            return acc;
+        }, {});
+    }
+
+    /**
+     * Returns an array of objects representing the children keys and nodes of the node with the given key.
+     * @param {string} key The key of the node for which to find the children.
+     * @returns {{ key: string, value: T}[]} An array of values representing the children nodes.
+     * @group Hierarchy / Children
+     */
+    childrenPairs(key: string): { key: string; value: T }[] {
+        return this.childrenKeys(key).map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
+    }
+
+    /**
+     * Applies a reducer function to each child of the given node
+     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
+     * - `key` (string): The key of the current node being processed.
+     * - `value` (type `T`): The value associated with the current node being processed.
+     * - `i` (number): The index of the current node in the child.
+     * - `accumulation` (type `R`): The accumulated result from previous reductions.
+     * @param {R} start The initial value of the accumulator for the reduction.
+     * @param {string} key the node from which to get children from
+     * @returns {R} The final accumulated result after applying the reducer to all nodes.
+     * @group Hierarchy / Children
+     */
+    reduceChildren<R = void>(reducer: KeyedReducer<T, string, R>, start: R, key: string): R {
+        return this.childrenKeys(key).reduce((acc, key, i) => {
+            return reducer(this._store[key].value, key, i, acc);
+        }, start);
+    }
+
+    /**
+     * Maps a function to each child of the target node.
+     *
+     * @template R - The type of the result.
+     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
+     *   - `value` (type `T`): The value associated with the current node being processed.
+     *   - `key` (string): The key of the current node being processed.
+     *   - `i` (number): The index of the current node in the child.
+     * @param {string} key the node from which to get children from
+     * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
+     * @group Hierarchy / Children
+     */
+    mapChildren<R>(mapper: KeyedMapper<T, string, R>, key: string): R[] {
+        return this.childrenKeys(key).map<R>((key, i) => {
+            return mapper(this._store[key].value, key, i);
+        });
     }
 
     /**
      * Returns an array of keys representing the sibling nodes of the node with the given key.
      * @param {string} key The key of the node for which to find the siblings.
      * @returns {string[]} An array of keys representing the sibling nodes.
-     * @group Hierarchy
+     * @group Hierarchy / Siblings
      */
     siblingKeys(key: string): string[] {
         if (this.has(key)) {
@@ -809,22 +1082,102 @@ export class Tree<T> {
 
     /**
      * Returns an array of values representing the sibling nodes of the node with the given key.
+     * @alias siblingValues
      * @param {string} key The key of the node for which to find the siblings.
      * @returns {T[]} An array of values representing the sibling nodes.
-     * @group Hierarchy
+     * @group Hierarchy / Siblings
      */
     siblings(key: string): T[] {
-        if (this.has(key)) {
-            return this.siblingKeys(key).map((k) => this._store[k].value);
-        }
-        return [];
+        return this.siblingValues(key);
+    }
+
+    /**
+     * Returns an array of values representing the sibling nodes of the node with the given key.
+     * @param {string} key The key of the node for which to find the siblings.
+     * @returns {T[]} An array of values representing the sibling nodes.
+     * @group Hierarchy / Siblings
+     */
+    siblingValues(key: string): T[] {
+        return this.siblingKeys(key).map((k) => this._store[k].value);
+    }
+
+    /**
+     * Returns an array of tuples representing the sibling keys and nodes of the node with the given key.
+     * @param {string} key The key of the node for which to find the siblings.
+     * @returns {[string, T][]} An array of values representing the sibling nodes.
+     * @group Hierarchy / Siblings
+     */
+    siblingTuples(key: string): [string, T][] {
+        return this.siblingKeys(key).map((k) => [k, this._store[k].value]);
+    }
+
+    /**
+     * Returns an object representing the sibling nodes of the given node, with keys as node keys and values as node values.
+     * @param {string} key The key of the node for which to find the sibling.
+     * @returns {{[key: string]: T}} An array of values representing the sibling nodes.
+     * @group Hierarchy / Siblings
+     */
+    siblingCollection(key: string): { [key: string]: T } {
+        return this.siblingKeys(key).reduce<{ [key: string]: T }>((acc, k) => {
+            acc[k] = this._store[k].value;
+            return acc;
+        }, {});
+    }
+
+    /**
+     * Returns an array of objects representing the sibling keys and nodes of the node with the given key.
+     * @param {string} key The key of the node for which to find the sibling.
+     * @returns {{ key: string, value: T}[]} An array of values representing the sibling nodes.
+     * @group Hierarchy / Siblings
+     */
+    siblingPairs(key: string): { key: string; value: T }[] {
+        return this.siblingKeys(key).map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
+    }
+
+    /**
+     * Applies a reducer function to each sibling of the given node
+     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
+     * - `key` (string): The key of the current node being processed.
+     * - `value` (type `T`): The value associated with the current node being processed.
+     * - `i` (number): The index of the current node in the sibling.
+     * - `accumulation` (type `R`): The accumulated result from previous reductions.
+     * @param {R} start The initial value of the accumulator for the reduction.
+     * @param {string} key the node from which to get siblings from
+     * @returns {R} The final accumulated result after applying the reducer to all nodes.
+     * @group Hierarchy / Siblings
+     */
+    reduceSiblings<R = void>(reducer: KeyedReducer<T, string, R>, start: R, key: string): R {
+        return this.siblingKeys(key).reduce((acc, key, i) => {
+            return reducer(this._store[key].value, key, i, acc);
+        }, start);
+    }
+
+    /**
+     * Maps a function to each sibling of the target node.
+     *
+     * @template R - The type of the result.
+     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
+     *   - `value` (type `T`): The value associated with the current node being processed.
+     *   - `key` (string): The key of the current node being processed.
+     *   - `i` (number): The index of the current node in the sibling.
+     * @param {string} key the node from which to get siblings from
+     * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
+     * @group Hierarchy / Siblings
+     */
+    mapSiblings<R>(mapper: KeyedMapper<T, string, R>, key: string): R[] {
+        return this.siblingKeys(key).map<R>((key, i) => {
+            return mapper(this._store[key].value, key, i);
+        });
     }
 
     /**
      * Returns an array of keys representing the descendant nodes of the node with the given key.
      * @param {string} key The key of the node for which to find the descendants.
      * @returns {string[]} An array of keys representing the descendant nodes.
-     * @group Hierarchy
+     * @group Hierarchy / Descendents
      */
     wideDescendentKeys(key: string): string[] {
         const res: string[] = [];
@@ -844,19 +1197,102 @@ export class Tree<T> {
 
     /**
      * Returns an array of values representing the descendant nodes of the node with the given key.
+     * @alias wideDescendentValues
      * @param {string} key The key of the node for which to find the descendants.
      * @returns {T[]} An array of values representing the descendant nodes.
-     * @group Hierarchy
+     * @group Hierarchy / Descendents
      */
     wideDescendents(key: string): T[] {
+        return this.wideDescendentValues(key);
+    }
+
+    /**
+     * Returns an array of values representing the descendant nodes of the node with the given key.
+     * @param {string} key The key of the node for which to find the descendants.
+     * @returns {T[]} An array of values representing the descendant nodes.
+     * @group Hierarchy / Descendents
+     */
+    wideDescendentValues(key: string): T[] {
         return this.wideDescendentKeys(key).map((k) => this._store[k].value);
+    }
+
+    /**
+     * Returns an array of tuples representing the descemdemt keys and nodes of the node with the given key in width-first order.
+     * @param {string} key The key of the node for which to find the descendents.
+     * @returns {[string, T][]} An array of values representing the descendent nodes.
+     * @group Hierarchy / Descendents
+     */
+    wideDescendentTuples(key: string): [string, T][] {
+        return this.wideDescendentKeys(key).map((k) => [k, this._store[k].value]);
+    }
+
+    /**
+     * Returns an object representing the descendent nodes of the given node, with keys as node keys and values as node values in width-first order.
+     * @param {string} key The key of the node for which to find the descendents.
+     * @returns {{[key: string]: T}} An array of values representing the descendents nodes.
+     * @group Hierarchy / Descendents
+     */
+    wideDescendentCollection(key: string): { [key: string]: T } {
+        return this.wideDescendentKeys(key).reduce<{ [key: string]: T }>((acc, k) => {
+            acc[k] = this._store[k].value;
+            return acc;
+        }, {});
+    }
+
+    /**
+     * Returns an array of objects representing the descendent keys and nodes of the node with the given key in width-first order.
+     * @param {string} key The key of the node for which to find the descendents.
+     * @returns {{ key: string, value: T}[]} An array of values representing the descendent nodes.
+     * @group Hierarchy / Descendents
+     */
+    wideDescendentPairs(key: string): { key: string; value: T }[] {
+        return this.wideDescendentKeys(key).map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
+    }
+
+    /**
+     * Applies a reducer function to each descendent in the tree in a width-first traversal.
+     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
+     * - `key` (string): The key of the current node being processed.
+     * - `value` (type `T`): The value associated with the current node being processed.
+     * - `i` (number): The index of the current node in the width-first traversal.
+     * - `accumulation` (type `R`): The accumulated result from previous reductions.
+     * @param {R} start The initial value of the accumulator for the reduction.
+     * @param {string} key the node from which to iterate the descendents from
+     * @returns {R} The final accumulated result after applying the reducer to all nodes.
+     * @group Hierarchy / Descendents
+     */
+    reduceWideDescendents<R = void>(reducer: KeyedReducer<T, string, R>, start: R, key: string): R {
+        return this.wideDescendentKeys(key).reduce((acc, key, i) => {
+            return reducer(this._store[key].value, key, i, acc);
+        }, start);
+    }
+
+    /**
+     * Maps a function to each descendent of the target node in a wide-order traversal.
+     *
+     * @template R - The type of the result.
+     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
+     *   - `value` (type `T`): The value associated with the current node being processed.
+     *   - `key` (string): The key of the current node being processed.
+     *   - `i` (number): The index of the current node in the wide-order traversal.
+     * @param {string} key the node from which to iterate the descendents from
+     * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
+     * @group Hierarchy / Descendents
+     */
+    mapWideDescendents<R>(mapper: KeyedMapper<T, string, R>, key: string): R[] {
+        return this.wideDescendentKeys(key).map<R>((key, i) => {
+            return mapper(this._store[key].value, key, i);
+        });
     }
 
     /**
      * Returns an array of keys representing the descendant nodes of the node with the given key in depth-first order.
      * @param {string} key The key of the node for which to find the descendants.
      * @returns {string[]} An array of keys representing the descendant nodes.
-     * @group Hierarchy
+     * @group Hierarchy / Descendents
      */
     deepDescendentKeys(key: string): string[] {
         const res: string[] = [];
@@ -870,12 +1306,95 @@ export class Tree<T> {
 
     /**
      * Returns an array of values representing the descendant nodes of the node with the given key in depth-first order.
+     * @alias deepDescendentValues
      * @param {string} key The key of the node for which to find the descendants.
      * @returns {T[]} An array of values representing the descendant nodes.
-     * @group Hierarchy
+     * @group Hierarchy / Descendents
      */
     deepDescendents(key: string): T[] {
+        return this.deepDescendentValues(key);
+    }
+
+    /**
+     * Returns an array of values representing the descendant nodes of the node with the given key in depth-first order.
+     * @param {string} key The key of the node for which to find the descendants.
+     * @returns {T[]} An array of values representing the descendant nodes.
+     * @group Hierarchy / Descendents
+     */
+    deepDescendentValues(key: string): T[] {
         return this.deepDescendentKeys(key).map((k) => this._store[k].value);
+    }
+
+    /**
+     * Returns an array of tuples representing the descemdemt keys and nodes of the node with the given key in depth-first order.
+     * @param {string} key The key of the node for which to find the descendents.
+     * @returns {[string, T][]} An array of values representing the descendent nodes.
+     * @group Hierarchy / Descendents
+     */
+    deepDescendentTuples(key: string): [string, T][] {
+        return this.deepDescendentKeys(key).map((k) => [k, this._store[k].value]);
+    }
+
+    /**
+     * Returns an object representing the descendent nodes of the given node, with keys as node keys and values as node values in depth-first order.
+     * @param {string} key The key of the node for which to find the descendents.
+     * @returns {{[key: string]: T}} An array of values representing the descendents nodes.
+     * @group Hierarchy / Descendents
+     */
+    deepDescendentCollection(key: string): { [key: string]: T } {
+        return this.deepDescendentKeys(key).reduce<{ [key: string]: T }>((acc, k) => {
+            acc[k] = this._store[k].value;
+            return acc;
+        }, {});
+    }
+
+    /**
+     * Returns an array of objects representing the descendent keys and nodes of the node with the given key in depth-first order.
+     * @param {string} key The key of the node for which to find the descendents.
+     * @returns {{ key: string, value: T}[]} An array of values representing the descendent nodes.
+     * @group Hierarchy / Descendents
+     */
+    deepDescendentPairs(key: string): { key: string; value: T }[] {
+        return this.deepDescendentKeys(key).map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
+    }
+
+    /**
+     * Applies a reducer function to each descendent in the tree in a depth-first traversal.
+     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
+     * - `key` (string): The key of the current node being processed.
+     * - `value` (type `T`): The value associated with the current node being processed.
+     * - `i` (number): The index of the current node in the depth-first traversal.
+     * - `accumulation` (type `R`): The accumulated result from previous reductions.
+     * @param {R} start The initial value of the accumulator for the reduction.
+     * @param {string} key the node from which to iterate the descendents from
+     * @returns {R} The final accumulated result after applying the reducer to all nodes.
+     * @group Hierarchy / Descendents
+     */
+    reduceDeepDescendents<R = void>(reducer: KeyedReducer<T, string, R>, start: R, key: string): R {
+        return this.deepDescendentKeys(key).reduce((acc, key, i) => {
+            return reducer(this._store[key].value, key, i, acc);
+        }, start);
+    }
+
+    /**
+     * Maps a function to each descendent of the target node in a depth-order traversal.
+     *
+     * @template R - The type of the result.
+     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
+     *   - `value` (type `T`): The value associated with the current node being processed.
+     *   - `key` (string): The key of the current node being processed.
+     *   - `i` (number): The index of the current node in the depth-order traversal.
+     * @param {string} key the node from which to iterate the descendents from
+     * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
+     * @group Hierarchy / Descendents
+     */
+    mapDeepDescendents<R>(mapper: KeyedMapper<T, string, R>, key: string): R[] {
+        return this.deepDescendentKeys(key).map<R>((key, i) => {
+            return mapper(this._store[key].value, key, i);
+        });
     }
 
     /* Traversal */
@@ -883,7 +1402,7 @@ export class Tree<T> {
     /**
      * Returns an array of keys representing the root nodes of the tree.
      * @returns {string[]} An array of keys representing the root nodes.
-     * @group Traversal
+     * @group Hierarchy / Root
      */
     rootKeys(): string[] {
         return Object.keys(this._store).filter((a) => this._store[a].parent === null);
@@ -891,8 +1410,18 @@ export class Tree<T> {
 
     /**
      * Returns an array of values representing the root nodes of the tree.
+     * @alias rootValues
      * @returns {T[]} An array of values representing the root nodes.
-     * @group Traversal
+     * @group Hierarchy / Root
+     */
+    roots(): T[] {
+        return this.rootValues();
+    }
+
+    /**
+     * Returns an array of values representing the root nodes of the tree.
+     * @returns {T[]} An array of values representing the root nodes.
+     * @group Hierarchy / Root
      */
     rootValues(): T[] {
         return this.rootKeys().map((k) => this._store[k].value);
@@ -901,7 +1430,7 @@ export class Tree<T> {
     /**
      * Returns an array of key-value pairs representing the root nodes of the tree.
      * @returns {[string, T][]} An array of key-value pairs representing the root nodes.
-     * @group Traversal
+     * @group Hierarchy / Root
      */
     rootTuples(): [string, T][] {
         return this.rootKeys().map((k) => [k, this._store[k].value]);
@@ -910,7 +1439,7 @@ export class Tree<T> {
     /**
      * Returns an object representing the root nodes of the tree, with keys as node keys and values as node values.
      * @returns {{ [key: string]: T }} An object representing the root nodes.
-     * @group Traversal
+     * @group Hierarchy / Root
      */
     rootCollection(): { [key: string]: T } {
         return this.rootKeys().reduce<{ [key: string]: T }>((acc, k) => {
@@ -920,9 +1449,55 @@ export class Tree<T> {
     }
 
     /**
+     * Returns an array of objects representing the root keys and nodes of the tree.
+     * @returns {{ key: string, value: T}[]} An array of values representing the sibling nodes.
+     * @group Hierarchy / Root
+     */
+    rootPairs(): { key: string; value: T }[] {
+        return this.rootKeys().map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
+    }
+
+    /**
+     * Applies a reducer function to each root of the tree
+     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
+     * - `key` (string): The key of the current node being processed.
+     * - `value` (type `T`): The value associated with the current node being processed.
+     * - `i` (number): The index of the current node in the root list.
+     * - `accumulation` (type `R`): The accumulated result from previous reductions.
+     * @param {R} start The initial value of the accumulator for the reduction.
+     * @returns {R} The final accumulated result after applying the reducer to all root nodes.
+     * @group Hierarchy / Root
+     */
+    reduceRoots<R = void>(reducer: KeyedReducer<T, string, R>, start: R): R {
+        return this.rootKeys().reduce((acc, key, i) => {
+            return reducer(this._store[key].value, key, i, acc);
+        }, start);
+    }
+
+    /**
+     * Maps a function to each root of the tree.
+     *
+     * @template R - The type of the result.
+     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
+     *   - `value` (type `T`): The value associated with the current node being processed.
+     *   - `key` (string): The key of the current node being processed.
+     *   - `i` (number): The index of the current node in the root list.
+     * @returns {R[]} - An array containing the results of applying the mapper to all root nodes.
+     * @group Hierarchy / Root
+     */
+    mapRoots<R>(mapper: KeyedMapper<T, string, R>): R[] {
+        return this.rootKeys().map<R>((key, i) => {
+            return mapper(this._store[key].value, key, i);
+        });
+    }
+
+    /**
      * Returns an array of keys representing the leaf nodes of the tree.
      * @returns {string[]} An array of keys representing the leaf nodes.
-     * @group Traversal
+     * @group Hierarchy / Leaves
      */
     leafKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
         const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
@@ -943,10 +1518,23 @@ export class Tree<T> {
 
     /**
      * Returns an array of values representing the leaf nodes of the tree.
+     * @alias leafValues
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {T[]} An array of values representing the leaf nodes.
-     * @group Traversal
+     * @group Hierarchy / Leaves
+     */
+
+    leaves(origin?: string | string[], ...moreOrigins: string[]): T[] {
+        return this.leafValues(origin, ...moreOrigins);
+    }
+
+    /**
+     * Returns an array of values representing the leaf nodes of the tree.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
+     * @returns {T[]} An array of values representing the leaf nodes.
+     * @group Hierarchy / Leaves
      */
     leafValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
         return this.leafKeys(origin, ...moreOrigins).map((k) => this._store[k].value);
@@ -957,7 +1545,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {[string, T][]} An array of key-value pairs representing the leaf nodes.
-     * @group Traversal
+     * @group Hierarchy / Leaves
      */
     leafTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
         return this.leafKeys(origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
@@ -968,7 +1556,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {{ [key: string]: T }} An object representing the leaf nodes.
-     * @group Traversal
+     * @group Hierarchy / Leaves
      */
     leafCollection(origin?: string | string[], ...moreOrigins: string[]): { [key: string]: T } {
         return this.leafKeys(origin, ...moreOrigins).reduce<{ [key: string]: T }>((acc, k) => {
@@ -978,11 +1566,63 @@ export class Tree<T> {
     }
 
     /**
+     * Returns an array of objects object representing the leaf keys and value of the tree.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
+     * @returns {{ key: string, value: T }[]} An object representing the leaf nodes.
+     * @group Hierarchy / Leaves
+     */
+    leafPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
+        return this.leafKeys(origin, ...moreOrigins).map((key) => ({
+            key,
+            value: this._store[key].value,
+        }));
+    }
+
+    /**
+     * Applies a reducer function to each sibling of the given node
+     * @param {(key: string, value: T, i: number, accumulation: R) => R} reducer The reducer function to be applied. It takes four arguments:
+     * - `key` (string): The key of the current node being processed.
+     * - `value` (type `T`): The value associated with the current node being processed.
+     * - `i` (number): The index of the current node in the sibling.
+     * - `accumulation` (type `R`): The accumulated result from previous reductions.
+     * @param {R} start The initial value of the accumulator for the reduction.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
+     * @returns {R} The final accumulated result after applying the reducer to all nodes.
+     * @group Hierarchy / Leaves
+     */
+    reduceLeaves<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
+        return this.leafKeys(origin, ...moreOrigins).reduce((acc, key, i) => {
+            return reducer(this._store[key].value, key, i, acc);
+        }, start);
+    }
+
+    /**
+     * Maps a function to each sibling of the target node.
+     *
+     * @template R - The type of the result.
+     * @param {KeyedMapper<T, string, R>} mapper - The mapping function to be applied. It takes three arguments:
+     *   - `value` (type `T`): The value associated with the current node being processed.
+     *   - `key` (string): The key of the current node being processed.
+     *   - `i` (number): The index of the current node in the sibling.
+     * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
+     * @param {...string[]} [moreOrigins]
+     * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
+     * @group Hierarchy / Leaves
+     */
+    mapLeaves<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
+        return this.leafKeys(origin, ...moreOrigins).map<R>((key, i) => {
+            return mapper(this._store[key].value, key, i);
+        });
+    }
+
+    /**
      * Returns an array of keys representing the nodes of the tree in a width-first traversal.
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {string[]} An array of keys representing the nodes in width-first.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     wideKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
         const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
@@ -1006,7 +1646,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {T[]} An array of values representing the nodes in width-first.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     wideValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
         return this.wideKeys(origin, ...moreOrigins).map((k) => this._store[k].value);
@@ -1017,7 +1657,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {[string, T][]} An array of key-value tuples representing the nodes in width-first.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     wideTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
         return this.wideKeys(origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
@@ -1029,7 +1669,7 @@ export class Tree<T> {
      * @param {...string[]} [moreOrigins]
      * @returns { { key: string; value: T }[] } An array of objects representing the key-value pairs of the nodes in width-first.
      * Each object in the array has two properties: `key` (string) representing the key of the node and `value` (type `T`) representing the value associated with the node.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     widePairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
         return this.wideKeys(origin, ...moreOrigins).map((key) => ({
@@ -1049,7 +1689,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {R} The final accumulated result after applying the reducer to all nodes.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     reduceWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
         return this.wideKeys(origin, ...moreOrigins).reduce((acc, key, i) => {
@@ -1068,7 +1708,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     mapWide<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
         return this.wideKeys(origin, ...moreOrigins).map<R>((key, i) => {
@@ -1081,7 +1721,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {string[]} An array of keys representing all nodes in the tree in a depth-first traversal.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     deepKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
         const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
@@ -1099,7 +1739,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {T[]} An array of values associated with all nodes in the tree in a depth-first traversal.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     deepValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
         return this.deepKeys(origin, ...moreOrigins).map((k) => this._store[k].value);
@@ -1110,7 +1750,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {[string, T][]} An array of key-value tuples representing all nodes in the tree in a depth-first traversal.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     deepTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
         return this.deepKeys(origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
@@ -1122,7 +1762,7 @@ export class Tree<T> {
      * @param {...string[]} [moreOrigins]
      * @returns { { key: string; value: T }[] } An array of objects representing the key-value pairs of the nodes in depth-first.
      * Each object in the array has two properties: `key` (string) representing the key of the node and `value` (type `T`) representing the value associated with the node.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     deepPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
         return this.deepKeys(origin, ...moreOrigins).map((key) => ({
@@ -1142,7 +1782,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {R} The final accumulated result after applying the reducer to all nodes.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     reduceDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
         return this.deepKeys(origin, ...moreOrigins).reduce((acc, key, i) => {
@@ -1161,7 +1801,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     mapDeep<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
         return this.deepKeys(origin, ...moreOrigins).map<R>((key, i) => {
@@ -1174,7 +1814,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {string[]} An array of keys representing the nodes in width-first starting from leaf nodes.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     wideUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
         const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
@@ -1205,7 +1845,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {T[]} An array of values representing the nodes in width-first starting from leaf nodes.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     wideUpwardValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
         return this.wideUpwardKeys(origin, ...moreOrigins).map((k) => this._store[k].value);
@@ -1216,7 +1856,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {[string, T][]} An array of key-value pairs representing the nodes in width-first starting from leaf nodes.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     wideUpwardTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
         return this.wideUpwardKeys(origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
@@ -1228,7 +1868,7 @@ export class Tree<T> {
      * @param {...string[]} [moreOrigins]
      * @returns { { key: string; value: T }[] } An array of objects representing the key-value pairs of the nodes in width-first.
      * Each object in the array has two properties: `key` (string) representing the key of the node and `value` (type `T`) representing the value associated with the node.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     wideUpwardPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
         return this.wideUpwardKeys(origin, ...moreOrigins).map((key) => ({
@@ -1248,7 +1888,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {R} The final accumulated result after applying the reducer to all nodes.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     reduceUpwardsWide<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
         return this.wideUpwardKeys(origin, ...moreOrigins).reduce((acc, key, i) => {
@@ -1267,7 +1907,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
-     * @group Traversal
+     * @group Traversal / Wide
      */
     mapUpwardsWide<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
         return this.wideUpwardKeys(origin, ...moreOrigins).map<R>((key, i) => {
@@ -1280,7 +1920,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {string[]} An array of keys representing all nodes in the tree in a depth-first traversal.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     deepUpwardKeys(origin?: string | string[], ...moreOrigins: string[]): string[] {
         const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
@@ -1304,7 +1944,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {T[]} An array of values associated with all nodes in the tree in a depth-first traversal.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     deepUpwardValues(origin?: string | string[], ...moreOrigins: string[]): T[] {
         return this.deepUpwardKeys(origin, ...moreOrigins).map((k) => this._store[k].value);
@@ -1315,7 +1955,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {[string, T][]} An array of key-value tuples representing all nodes in the tree in a depth-first traversal.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     deepUpwardTuples(origin?: string | string[], ...moreOrigins: string[]): [string, T][] {
         return this.deepUpwardKeys(origin, ...moreOrigins).map((k) => [k, this._store[k].value]);
@@ -1326,7 +1966,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns { { key: string; value: T }[] } An array of key-value pairs representing all nodes in the tree in a depth-first traversal.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     deepUpwardPairs(origin?: string | string[], ...moreOrigins: string[]): { key: string; value: T }[] {
         return this.deepUpwardKeys(origin, ...moreOrigins).map((key) => ({
@@ -1346,7 +1986,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {R} The final accumulated result after applying the reducer to all nodes.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     reduceUpwardsDeep<R = void>(reducer: KeyedReducer<T, string, R>, start: R, origin?: string | string[], ...moreOrigins: string[]): R {
         return this.deepUpwardKeys(origin, ...moreOrigins).reduce((acc, key, i) => {
@@ -1365,7 +2005,7 @@ export class Tree<T> {
      * @param {string | string[]} [origin=this.rootKeys()] where the traversal begins. If unspecified, will be all root nodes, thus traversal the whole forest.
      * @param {...string[]} [moreOrigins]
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
-     * @group Traversal
+     * @group Traversal / Deep
      */
     mapUpwardsDeep<R>(mapper: KeyedMapper<T, string, R>, origin?: string | string[], ...moreOrigins: string[]): R[] {
         return this.deepUpwardKeys(origin, ...moreOrigins).map<R>((key, i) => {
@@ -1382,7 +2022,7 @@ export class Tree<T> {
      * @param {string} from The key of the starting node.
      * @param {string} to The key of the ending node.
      * @returns {string[]} An array of keys representing the path from the starting node to the ending node, if it exists. If no such path is viable, the array will be empty.
-     * @group Traversal
+     * @group Traversal / Path
      */
     pathKeys(from: string, to: string): string[] {
         if (from === to) {
@@ -1437,7 +2077,7 @@ export class Tree<T> {
      * @param {string} from The key of the starting node.
      * @param {string} to The key of the ending node.
      * @returns {T[]} An array of values associated with the nodes along the path from the starting node to the ending node, if it exists.
-     * @group Traversal
+     * @group Traversal / Path
      */
     pathValues(from: string, to: string): T[] {
         return this.pathKeys(from, to).map((each) => this._store[each].value);
@@ -1448,7 +2088,7 @@ export class Tree<T> {
      * @param {string} from The key of the starting node.
      * @param {string} to The key of the ending node.
      * @returns {[string, T][]} An array of key-value tuples representing the nodes along the path from the starting node to the ending node, if it exists.
-     * @group Traversal
+     * @group Traversal / Path
      */
     pathTuples(from: string, to: string): [string, T][] {
         return this.pathKeys(from, to).map((each) => [each, this._store[each].value]);
@@ -1460,7 +2100,7 @@ export class Tree<T> {
      * @param {string} to The key of the ending node.
      * @returns { { key: string; value: T }[] } An array of objects representing the key-value pairs of the nodes in depth-first.
      * Each object in the array has two properties: `key` (string) representing the key of the node and `value` (type `T`) representing the value associated with the node.
-     * @group Traversal
+     * @group Traversal / Path
      */
     pathPairs(from: string, to: string): { key: string; value: T }[] {
         return this.pathKeys(from, to).map((key) => ({
@@ -1480,7 +2120,7 @@ export class Tree<T> {
      * - `accumulation` (type `R`): The accumulated result from previous reductions.
      * @param {R} start The initial value of the accumulator for the reduction.
      * @returns {R} The final accumulated result after applying the reducer to all nodes along the path.
-     * @group Traversal
+     * @group Traversal / Path
      */
     reducePath<R = void>(from: string, to: string, reducer: KeyedReducer<T, string, R>, start: R): R {
         return this.pathKeys(from, to).reduce((acc, key, i) => {
@@ -1499,7 +2139,7 @@ export class Tree<T> {
      *   - `key` (string): The key of the current node being processed.
      *   - `i` (number): The index of the current node in the wide-order traversal.
      * @returns {R[]} - An array containing the results of applying the mapper to all nodes.
-     * @group Traversal
+     * @group Traversal / Path
      */
     mapPath<R = void>(from: string, to: string, mapper: KeyedMapper<T, string, R>): R[] {
         return this.pathKeys(from, to).map((key, i) => {

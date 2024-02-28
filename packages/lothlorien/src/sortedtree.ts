@@ -16,6 +16,9 @@ export class SortedTree<T> extends Tree<T> {
         this._comparator = defaultComparator ?? SortedTree.DEFAULT_COMPARATOR;
     }
 
+    /**
+     * @group Utility
+     */
     static DEFAULT_COMPARATOR = ([aKey]: [string, unknown], [bKey]: [string, unknown]) => natsort(aKey, bKey);
 
     /**
@@ -24,7 +27,6 @@ export class SortedTree<T> extends Tree<T> {
      * @returns {Tree<T>}
      * @group Utility
      */
-
     static from<T>(contents: { [key: string]: TreeEntry<T> }, comparator?: Comparator<[string, T]>): SortedTree<T> {
         const t = new SortedTree<T>(comparator);
         t._keys = Object.keys(contents);
@@ -37,7 +39,7 @@ export class SortedTree<T> extends Tree<T> {
      * gives the index of a given key amongst it's siblings.
      * @param {string} key
      * @returns {number}
-     * @group Hierarchy
+     * @group Hierarchy / Siblings
      */
     siblingIndexOf(key: string): number {
         const siblings = this.siblingKeys(key);
@@ -58,7 +60,7 @@ export class SortedTree<T> extends Tree<T> {
      * @param {string} key
      * @param {KeyedDiscriminator<T>} selector
      * @returns {number}
-     * @group Hierarchy
+     * @group Hierarchy / Siblings
      */
     findSiblingIndexOf(key: string, selector: KeyedDiscriminator<T>): number {
         const siblings = this.siblingKeys(key);
@@ -71,7 +73,7 @@ export class SortedTree<T> extends Tree<T> {
      * returns the key of the next node relative to the given key in the flattened tree.
      * @param {string} key
      * @returns {string | undefined}
-     * @group Traversal
+     * @group Traversal / Flat Path
      */
     nextKey(key: string): string | undefined {
         if (this.has(key)) {
@@ -87,7 +89,7 @@ export class SortedTree<T> extends Tree<T> {
      * returns the value of the next node relative to the given key in the flattened tree.
      * @param {string} key
      * @returns {T | undefined}
-     * @group Traversal
+     * @group Traversal / Flat Path
      */
     next(key: string): T | undefined {
         const nk = this.nextKey(key);
@@ -101,7 +103,7 @@ export class SortedTree<T> extends Tree<T> {
      * @param {string} key
      * @param {KeyedDiscriminator<T>} selector
      * @returns {string | undefined}
-     * @group Traversal
+     * @group Traversal / Flat Path
      */
     nextKeyWith(key: string, selector: KeyedDiscriminator<T>): string | undefined {
         if (this.has(key)) {
@@ -120,7 +122,7 @@ export class SortedTree<T> extends Tree<T> {
      * @param {string} key
      * @param {KeyedDiscriminator<T>} selector
      * @returns {T | undefined}
-     * @group Traversal
+     * @group Traversal / Flat Path
      */
     nextWith(key: string, selector: KeyedDiscriminator<T>): T | undefined {
         if (this.has(key)) {
@@ -138,7 +140,7 @@ export class SortedTree<T> extends Tree<T> {
      * returns the key of the previous node relative to the given key in the flattened tree.
      * @param {string} key
      * @returns {string | undefined}
-     * @group Traversal
+     * @group Traversal / Flat Path
      */
     prevKey(key: string): string | undefined {
         if (this.has(key)) {
@@ -154,7 +156,7 @@ export class SortedTree<T> extends Tree<T> {
      * returns the value of the previous node relative to the given key in the flattened tree.
      * @param {string} key
      * @returns {T | undefined}
-     * @group Traversal
+     * @group Traversal / Flat Path
      */
     prev(key: string): T | undefined {
         const pk = this.prevKey(key);
@@ -168,7 +170,7 @@ export class SortedTree<T> extends Tree<T> {
      * @param {string} key
      * @param {KeyedDiscriminator<T>} selector
      * @returns {T | undefined}
-     * @group Traversal
+     * @group Traversal / Flat Path
      */
     prevKeyWith(key: string, selector: (value: T, key: string) => boolean): string | undefined {
         if (this.has(key)) {
@@ -187,7 +189,7 @@ export class SortedTree<T> extends Tree<T> {
      * @param {string} key
      * @param {KeyedDiscriminator<T>} selector
      * @returns {T | undefined}
-     * @group Traversal
+     * @group Traversal / Flat Path
      */
     prevWith(key: string, selector: (value: T, key: string) => boolean): T | undefined {
         if (this.has(key)) {
@@ -230,6 +232,7 @@ export class SortedTree<T> extends Tree<T> {
     /**
      * set the default comparator of the SortedTree to a new comparator.
      * @param comparator the comparator to replace the default comprator with
+     * @group Utility
      */
     setComparator(comparator: Comparator<[string, T]>): void {
         this._comparator = comparator;
@@ -292,7 +295,7 @@ export class SortedTree<T> extends Tree<T> {
      * @param {string} from the key of the starting node
      * @param {string} to the key of the ending node
      * @returns {string[]} An array of keys representing the path.
-     * @group Traversal
+     * @group Traversal / Flat Path
      */
     flatPathKeys(from: string, to: string): string[] {
         const fIdx = this._keys.indexOf(from);
@@ -310,7 +313,7 @@ export class SortedTree<T> extends Tree<T> {
     // OVERRIDE SUPERCLASS METHODS
 
     /**
-     * @group Traversal
+     * @group Hierarchy / Root
      */
     override rootKeys(): string[] {
         return this._keys.filter((a) => this._store[a].parent === null);
@@ -319,7 +322,7 @@ export class SortedTree<T> extends Tree<T> {
     /**
      * Returns an array of keys representing the leaf nodes of the tree.
      * @returns {string[]} An array of keys representing the leaf nodes.
-     * @group Traversal
+     * @group Hierarchy / Leaves
      */
     override leafKeys(origin: string | string[] = this.rootKeys(), ...moreOrigins: string[]): string[] {
         const from = [...(Array.isArray(origin) ? origin : [origin]), ...moreOrigins];
