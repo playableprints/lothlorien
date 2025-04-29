@@ -71,6 +71,12 @@ const App = () => {
 };
 ```
 
+# from v0.2.0 to v0.3.0
+
+## RecursiveTreeView
+
+Another top-level tree renderer. This one does not use virtualization. Instead, to be performant, it will bail out on rendering child nodes as early as possible by checking to see if the current node is folded. If it is, it will never even look up child nodes.
+
 # from v0.1.0 to v0.2.0
 
 ## TreeNodeRenderer
