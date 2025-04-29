@@ -318,7 +318,7 @@ export type Marker = "├" | "│" | " " | "└";
 /**
  *
  * @param nodeKey the node key that you want to get the controls for.
- * @returns { isOpen: boolean, togge: () => void }
+ * @returns { isOpen: boolean, toggle: () => void }
  *
  * @group Hooks
  */
@@ -454,4 +454,25 @@ export const UnderFold = memo(({ children, nodeKey }: { children?: ReactNode; no
 export const NodeWrapper = <T extends Tree<any>>({ nodeKey, treeRef, renderer: Renderer }: { nodeKey: string; treeRef: MutableRefObject<T>; renderer: TreeNodeComponent<T> }) => {
     const { parent, value, children } = useSnapshot(treeRef.current.entry(nodeKey)!);
     return <Renderer value={value} childKeys={children} nodeKey={nodeKey} treeRef={treeRef} parentKey={parent} />;
+};
+
+export const RecursiveNodeWrapper = <T extends Tree<any>>({ nodeKey, renderer: Renderer, treeRef }: { nodeKey: string; treeRef: MutableRefObject<T>; renderer: TreeNodeComponent<T> }) => {
+    const { parent, value, children } = useSnapshot(treeRef.current.entry(nodeKey)!);
+
+    const { isOpen } = useFoldState(nodeKey);
+
+    const childNodes = useMemo(() => {
+        return !isOpen
+            ? null
+            : children.map((cId) => {
+                  return <RecursiveNodeWrapper<T> treeRef={treeRef} renderer={Renderer} nodeKey={cId} key={cId} />;
+              });
+    }, [Renderer, children, treeRef, isOpen]);
+
+    return (
+        <>
+            <Renderer treeRef={treeRef} nodeKey={nodeKey} value={value} parentKey={parent} childKeys={children} />
+            {childNodes}
+        </>
+    );
 };
