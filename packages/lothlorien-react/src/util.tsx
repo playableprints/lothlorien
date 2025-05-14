@@ -461,18 +461,14 @@ export const RecursiveNodeWrapper = <T extends Tree<any>>({ nodeKey, renderer: R
 
     const { isOpen } = useFoldState(nodeKey);
 
-    const childNodes = useMemo(() => {
-        return !isOpen
-            ? null
-            : children.map((cId) => {
-                  return <RecursiveNodeWrapper<T> treeRef={treeRef} renderer={Renderer} nodeKey={cId} key={cId} />;
-              });
-    }, [Renderer, children, treeRef, isOpen]);
-
     return (
         <>
             <Renderer treeRef={treeRef} nodeKey={nodeKey} value={value} parentKey={parent} childKeys={children} />
-            {childNodes}
+            {!isOpen
+                ? null
+                : children.map((cId) => {
+                      return <RecursiveNodeWrapper<T> treeRef={treeRef} renderer={Renderer} nodeKey={cId} key={cId} />;
+                  })}
         </>
     );
 };
